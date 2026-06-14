@@ -1,0 +1,29 @@
+{
+  "name": "taskflow-backend",
+  "version": "1.0.0",
+  "description": "TaskFlow API - Production-ready task management backend",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "taskflow",
+    "task-management",
+    "api"
+  ],
+  "author": "TaskFlow",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-validator": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^10.1.2",
+    "mongoose": "^8.7.0",
+    "morgan": "^1.10.0"
+  }
+}

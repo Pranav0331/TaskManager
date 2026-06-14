@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-nimbus-200 dark:border-nimbus-800;
+  }
+
+  body {
+    @apply bg-nimbus-50 text-nimbus-900 antialiased dark:bg-nimbus-950 dark:text-nimbus-100;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-nimbus-300 dark:bg-nimbus-700 rounded-full;
+  }
+}
+
+@layer components {
+  .nimbus-card {
+    @apply bg-white dark:bg-nimbus-900 border border-nimbus-200/80 dark:border-nimbus-800 rounded-xl shadow-nimbus;
+  }
+
+  .nimbus-input {
+    @apply w-full px-3.5 py-2.5 text-sm bg-white dark:bg-nimbus-900 border border-nimbus-200 dark:border-nimbus-700 rounded-lg
+           text-nimbus-900 dark:text-nimbus-100 placeholder:text-nimbus-400
+           focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500
+           transition-all duration-200;
+  }
+
+  .nimbus-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
+           bg-brand-600 hover:bg-brand-700 text-white rounded-lg
+           transition-all duration-200 shadow-sm hover:shadow-md
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .nimbus-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
+           bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700
+           text-nimbus-700 dark:text-nimbus-200 rounded-lg
+           hover:bg-nimbus-50 dark:hover:bg-nimbus-700
+           transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .nimbus-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium
+           text-nimbus-600 dark:text-nimbus-400 rounded-lg
+           hover:bg-nimbus-100 dark:hover:bg-nimbus-800
+           transition-all duration-200;
+  }
+
+  .skeleton {
+    @apply bg-gradient-to-r from-nimbus-200 via-nimbus-100 to-nimbus-200 dark:from-nimbus-800 dark:via-nimbus-700 dark:to-nimbus-800
+           bg-[length:200%_100%] animate-shimmer rounded;
+  }
+}
