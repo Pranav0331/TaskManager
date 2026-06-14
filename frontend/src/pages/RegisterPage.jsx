@@ -87,7 +87,7 @@ const RegisterPage = () => {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
-                  placeholder="John Doe"
+                  placeholder="Enter Your Name:"
                   className="nimbus-input pl-10"
                 />
               </div>
