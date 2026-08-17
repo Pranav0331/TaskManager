@@ -3,6 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
+import { verifyEmailConnection } from './utils/email.js';
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -10,6 +11,7 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 dotenv.config();
 
 connectDB();
+verifyEmailConnection();
 
 const app = express();
 

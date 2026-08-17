@@ -6,6 +6,16 @@ export const authService = {
     return response.data;
   },
 
+  verifyOtp: async (data) => {
+    const response = await api.post('/auth/verify-otp', data);
+    return response.data;
+  },
+
+  resendOtp: async (data) => {
+    const response = await api.post('/auth/resend-otp', data);
+    return response.data;
+  },
+
   login: async (data) => {
     const response = await api.post('/auth/login', data);
     return response.data;

@@ -23,13 +23,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = useCallback(async (data) => {
-    const response = await authService.register(data);
-    if (response.success) {
-      const { token, ...userData } = response.data;
-      login(userData, token);
-    }
-    return response;
-  }, [login]);
+    return await authService.register(data);
+  }, []);
 
   const loginUser = useCallback(async (data) => {
     const response = await authService.login(data);

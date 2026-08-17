@@ -20,8 +20,9 @@ const RegisterPage = () => {
     try {
       const response = await register(form);
       if (response.success) {
-        toast.success('Account created successfully!');
-        navigate('/dashboard');
+        toast.success('Verification code sent to your email!');
+        sessionStorage.setItem('pending_otp_email', form.email);
+        navigate('/verify-otp', { state: { email: form.email } });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed');
@@ -32,6 +33,7 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen flex">
+      {/* Left hero banner */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
         <div className="relative z-10 flex flex-col justify-center px-16">
@@ -59,6 +61,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
+      {/* Right form container */}
       <div className="flex-1 flex items-center justify-center p-8 bg-white dark:bg-nimbus-950">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
@@ -87,7 +90,7 @@ const RegisterPage = () => {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
-                  placeholder="Enter Your Name:"
+                  placeholder="Enter Your Name"
                   className="nimbus-input pl-10"
                 />
               </div>

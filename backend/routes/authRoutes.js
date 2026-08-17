@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, getMe } from '../controllers/authController.js';
+import { register, verifyOtp, resendOtp, login, getMe } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 
@@ -18,7 +18,30 @@ router.post(
   validate,
   register
 );
-//task
+
+router.post(
+  '/verify-otp',
+  [
+    body('email').isEmail().withMessage('Please provide a valid email'),
+    body('otp')
+      .isLength({ min: 4, max: 4 })
+      .withMessage('OTP must be exactly 4 digits')
+      .isNumeric()
+      .withMessage('OTP must contain only numbers'),
+  ],
+  validate,
+  verifyOtp
+);
+
+router.post(
+  '/resend-otp',
+  [
+    body('email').isEmail().withMessage('Please provide a valid email'),
+  ],
+  validate,
+  resendOtp
+);
+
 router.post(
   '/login',
   [

@@ -4,6 +4,7 @@ import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
+import VerifyOtpPage from '../pages/VerifyOtpPage';
 import DashboardPage from '../pages/DashboardPage';
 import TasksPage from '../pages/TasksPage';
 import TaskDetailPage from '../pages/TaskDetailPage';
@@ -44,6 +45,14 @@ const AppRoutes = () => {
         element={
           <PublicRoute>
             <RegisterPage />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/verify-otp"
+        element={
+          <PublicRoute>
+            <VerifyOtpPage />
           </PublicRoute>
         }
       />
