@@ -16,16 +16,31 @@ verifyEmailConnection();
 const app = express();
 
 //Middleware
-const corsOrigin =
-  process.env.NODE_ENV === 'development'
-    ? (origin, callback) => {
-        if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, process.env.CLIENT_URL || 'http://localhost:5173');
-        }
-      }
-    : process.env.CLIENT_URL || 'http://localhost:5173';
+// const corsOrigin =
+//   process.env.NODE_ENV === 'development'
+//     ? (origin, callback) => {
+//         if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
+//           callback(null, true);
+//         } else {
+//           callback(null, process.env.CLIENT_URL || 'http://localhost:5173');
+//         }
+//       }
+//     : process.env.CLIENT_URL || 'http://localhost:5173';
+
+// app.use(
+//   cors({
+//     origin: corsOrigin,
+//     credentials: true,
+//   })
+// );
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+const app = express();
+
+const corsOrigin = [
+  'http://localhost:5173',
+  'https://task-manager-tau-blond-25.vercel.app'
+];
 
 app.use(
   cors({
@@ -33,6 +48,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
