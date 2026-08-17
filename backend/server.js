@@ -13,7 +13,7 @@ dotenv.config();
 connectDB();
 verifyEmailConnection();
 
-const app = express();
+//const app = express();
 
 //Middleware
 // const corsOrigin =
