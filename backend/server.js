@@ -10,53 +10,57 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 dotenv.config();
 
+// Database & email connection
 connectDB();
 verifyEmailConnection();
 
-//const app = express();
-
-//Middleware
-// const corsOrigin =
-//   process.env.NODE_ENV === 'development'
-//     ? (origin, callback) => {
-//         if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
-//           callback(null, true);
-//         } else {
-//           callback(null, process.env.CLIENT_URL || 'http://localhost:5173');
-//         }
-//       }
-//     : process.env.CLIENT_URL || 'http://localhost:5173';
-
-// app.use(
-//   cors({
-//     origin: corsOrigin,
-//     credentials: true,
-//   })
-// );
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
 const app = express();
 
-const corsOrigin = [
+// =========================
+// CORS Configuration
+// =========================
+
+const allowedOrigins = [
   'http://localhost:5173',
-  'https://task-manager-tau-blond-25.vercel.app'
+  'http://localhost:5174',
+  'https://task-manager-tau-blond-25.vercel.app',
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
 ];
 
-app.use(
-  cors({
-    origin: corsOrigin,
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || /^http:\/\/localhost:\d+$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
+// =========================
+// Body Parser Middleware
+// =========================
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// =========================
+// Development Logger
+// =========================
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Health check
+// =========================
+// Health Check
+// =========================
+
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -65,18 +69,49 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// =========================
 // Routes
+// =========================
+
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
-// Error handling
+// =========================
+// Error Handling
+// =========================
+
 app.use(notFound);
 app.use(errorHandler);
 
+// =========================
+// Server Initialization
+// =========================
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`TaskFlow API running on port ${PORT}`);
 });
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use by another process.`);
+    console.error(`👉 Run: lsof -ti :${PORT} | xargs kill -9`);
+    process.exit(1);
+  } else {
+    console.error('Server error:', error);
+  }
+});
+
+// Graceful shutdown on restart (nodemon / SIGINT / SIGTERM)
+const gracefulShutdown = () => {
+  server.close(() => {
+    console.log('TaskFlow server closed gracefully');
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 export default app;
