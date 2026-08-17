@@ -15,46 +15,24 @@ verifyEmailConnection();
 
 const app = express();
 
-// Middleware
-// const corsOrigin =
-//   process.env.NODE_ENV === 'development'
-//     ? (origin, callback) => {
-//         if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
-//           callback(null, true);
-//         } else {
-//           callback(null, process.env.CLIENT_URL || 'http://localhost:5173');
-//         }
-//       }
-//     : process.env.CLIENT_URL || 'http://localhost:5173';
+//Middleware
+const corsOrigin =
+  process.env.NODE_ENV === 'development'
+    ? (origin, callback) => {
+        if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
+          callback(null, true);
+        } else {
+          callback(null, process.env.CLIENT_URL || 'http://localhost:5173');
+        }
+      }
+    : process.env.CLIENT_URL || 'http://localhost:5173';
 
-// app.use(
-//   cors({
-//     origin: corsOrigin,
-//     credentials: true,
-//   })
-//);
-const allowedOrigins = [
-  'http://localhost:5173',
-  process.env.CLIENT_URL
-].filter(Boolean);
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
-
-
+app.use(
+  cors({
+    origin: corsOrigin,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
