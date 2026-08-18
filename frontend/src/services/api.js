@@ -1,9 +1,28 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const PROD_API_URL = 'https://taskflow-backend-ezdl.onrender.com/api';
+
+const getBaseUrl = () => {
+  let url = import.meta.env.VITE_API_URL;
+
+  // Fallback to production backend URL if unset, relative, or mistakenly set to frontend domain in production
+  if (!url || url === '/api' || url.includes('vercel.app')) {
+    url = import.meta.env.PROD ? PROD_API_URL : (url || '/api');
+  }
+
+  // Strip trailing slashes and any mistakenly appended route suffixes
+  url = url.replace(/\/+$/, '').replace(/\/auth\/login$/, '').replace(/\/login$/, '');
+
+  // Ensure /api suffix exists on backend origin if missing
+  if (url.startsWith('http') && !url.endsWith('/api') && !url.includes('/api/')) {
+    url = `${url}/api`;
+  }
+
+  return url;
+};
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
