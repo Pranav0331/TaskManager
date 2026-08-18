@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const PROD_API_URL = 'https://taskflow-backend-ezdl.onrender.com/api';
+const PROD_API_URL = 'https://taskflow-backend-ezd1.onrender.com/api';
 
 const getBaseUrl = () => {
   let url = import.meta.env.VITE_API_URL;
