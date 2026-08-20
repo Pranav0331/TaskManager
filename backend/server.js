@@ -1,14 +1,22 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 import { verifyEmailConnection } from './utils/email.js';
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
-dotenv.config();
+// Global error handlers to prevent unhandled crashes
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 // Database & email connection
 connectDB();
@@ -103,15 +111,29 @@ server.on('error', (error) => {
   }
 });
 
-// Graceful shutdown on restart (nodemon / SIGINT / SIGTERM)
-const gracefulShutdown = () => {
-  server.close(() => {
-    console.log('TaskFlow server closed gracefully');
+// Graceful shutdown on restart (nodemon / node --watch / SIGINT / SIGTERM)
+const gracefulShutdown = (signal) => {
+  console.log(`Received ${signal}. Closing TaskFlow server...`);
+  if (server) {
+    if (typeof server.closeAllConnections === 'function') {
+      server.closeAllConnections();
+    }
+    if (typeof server.closeIdleConnections === 'function') {
+      server.closeIdleConnections();
+    }
+    server.close(async () => {
+      try {
+        await mongoose.connection.close(false);
+      } catch {}
+      console.log('TaskFlow server closed gracefully');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 };
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;

@@ -18,14 +18,26 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const response = await register(form);
-      if (response.success) {
-        toast.success('Verification code sent to your email!');
-        sessionStorage.setItem('pending_otp_email', form.email);
-        navigate('/verify-otp', { state: { email: form.email } });
+      const normalizedEmail = form.email.trim().toLowerCase();
+      const payload = {
+        name: form.name.trim(),
+        email: normalizedEmail,
+        password: form.password,
+      };
+
+      const response = await register(payload);
+
+      // Handle successful registration (HTTP 200 with success: true and data.email)
+      if (response && (response.success || response.data?.email)) {
+        const emailToVerify = response.data?.email || normalizedEmail;
+        toast.success(response.message || 'Verification code sent to your email!');
+        sessionStorage.setItem('pending_otp_email', emailToVerify);
+        navigate('/verify-otp', { state: { email: emailToVerify } });
+      } else {
+        toast.error(response?.message || 'Registration failed');
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      toast.error(error.response?.data?.message || error.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

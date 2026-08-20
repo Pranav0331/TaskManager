@@ -1,5 +1,13 @@
+import dns from 'node:dns';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+
+// Fix MongoDB Atlas querySrv EETIMEOUT by configuring reliable DNS servers
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch {
+  // Ignore in environments where setting DNS servers is not allowed
+}
 
 let memoryServer;
 

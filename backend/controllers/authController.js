@@ -48,7 +48,17 @@ export const register = async (req, res) => {
     });
 
     // Send OTP via email
-    await sendOTPEmail(normalizedEmail, otp);
+    console.log(`[AUTH REGISTER] Initiating OTP email dispatch to ${normalizedEmail}...`);
+    try {
+      await sendOTPEmail(normalizedEmail, otp);
+      console.log(`[AUTH REGISTER] OTP email dispatched successfully to ${normalizedEmail}`);
+    } catch (emailErr) {
+      console.error(`[AUTH REGISTER] Failed to send OTP email to ${normalizedEmail}:`, emailErr.message);
+      return res.status(500).json({
+        success: false,
+        message: emailErr.message || 'Failed to send verification email',
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -219,7 +229,17 @@ export const resendOtp = async (req, res) => {
     await otpDoc.save();
 
     // Send new OTP email
-    await sendOTPEmail(normalizedEmail, newOtp);
+    console.log(`[AUTH RESEND_OTP] Initiating OTP email dispatch to ${normalizedEmail}...`);
+    try {
+      await sendOTPEmail(normalizedEmail, newOtp);
+      console.log(`[AUTH RESEND_OTP] OTP email dispatched successfully to ${normalizedEmail}`);
+    } catch (emailErr) {
+      console.error(`[AUTH RESEND_OTP] Failed to send OTP email to ${normalizedEmail}:`, emailErr.message);
+      return res.status(500).json({
+        success: false,
+        message: emailErr.message || 'Failed to resend verification email',
+      });
+    }
 
     res.status(200).json({
       success: true,
