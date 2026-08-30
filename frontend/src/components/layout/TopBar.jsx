@@ -58,10 +58,14 @@ const TopBar = ({ title, subtitle }) => {
             <button className="hidden sm:flex p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500">
               <Search className="w-5 h-5" />
             </button>
-            <button className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 relative">
+            <Link
+              to="/settings"
+              title="Notification Settings"
+              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 relative"
+            >
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full" />
-            </button>
+            </Link>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500"

@@ -25,6 +25,8 @@
     "mongodb-memory-server": "^10.1.2",
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
-    "resend": "^6.20.0"
+    "node-cron": "^4.6.0",
+    "resend": "^6.20.0",
+    "web-push": "^3.6.7"
   }
 }

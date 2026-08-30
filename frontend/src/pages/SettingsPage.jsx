@@ -1,12 +1,84 @@
 import { motion } from 'framer-motion';
-import { Sun, Moon, User, Mail, Shield } from 'lucide-react';
+import {
+  Sun,
+  Moon,
+  User,
+  Mail,
+  Shield,
+  Bell,
+  Send,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
+  Calendar,
+  Clock,
+  UserCheck,
+  CheckCheck,
+  Smartphone,
+  Loader2,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { formatDateTime } from '../utils/constants';
+import useWebPush from '../hooks/useWebPush';
+import Button from '../components/ui/Button';
 
 const SettingsPage = () => {
   const { user } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
+  const {
+    isSupported,
+    permission,
+    isSubscribed,
+    loading: pushLoading,
+    actionLoading,
+    preferences,
+    subscribeUser,
+    unsubscribeUser,
+    sendTestNotification,
+    updatePreference,
+  } = useWebPush();
+
+  const handleMasterToggle = async () => {
+    if (isSubscribed) {
+      await unsubscribeUser();
+    } else {
+      await subscribeUser();
+    }
+  };
+
+  const getPermissionBadge = () => {
+    if (!isSupported) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          Unsupported Browser
+        </span>
+      );
+    }
+    if (permission === 'granted' && isSubscribed) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          Active & Subscribed
+        </span>
+      );
+    }
+    if (permission === 'denied') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          Blocked in Browser
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+        <Info className="w-3.5 h-3.5" />
+        Permission Required
+      </span>
+    );
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -15,11 +87,222 @@ const SettingsPage = () => {
         <p className="text-nimbus-500 mt-1">Manage your account and preferences</p>
       </motion.div>
 
+      {/* Web Push Notifications */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="nimbus-card"
+      >
+        <div className="px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-nimbus-900 dark:text-white">
+                Push Notifications
+              </h3>
+              <p className="text-xs text-nimbus-500">
+                Receive background alerts even when the tab is closed
+              </p>
+            </div>
+          </div>
+          {getPermissionBadge()}
+        </div>
+
+        <div className="px-6 py-5 space-y-6">
+          {/* Master Enable/Disable Switch */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800/60">
+            <div>
+              <p className="text-sm font-semibold text-nimbus-900 dark:text-white">
+                Enable Notifications
+              </p>
+              <p className="text-xs text-nimbus-500 mt-0.5">
+                {isSubscribed
+                  ? 'Notifications are currently active for this browser'
+                  : 'Allow this device to receive task updates and reminders'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={!isSupported || actionLoading || pushLoading}
+              onClick={handleMasterToggle}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 ${
+                isSubscribed ? 'bg-brand-600' : 'bg-nimbus-300 dark:bg-nimbus-700'
+              }`}
+            >
+              {actionLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                </div>
+              ) : (
+                <motion.div
+                  layout
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm"
+                  animate={{ left: isSubscribed ? '26px' : '2px' }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              )}
+            </button>
+          </div>
+
+          {/* Test Notification Button */}
+          <div className="flex items-center justify-between pt-1">
+            <div>
+              <p className="text-sm font-medium text-nimbus-900 dark:text-white">Test Delivery</p>
+              <p className="text-xs text-nimbus-500">Send an instant test alert to this browser</p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!isSubscribed || actionLoading}
+              onClick={sendTestNotification}
+              loading={actionLoading}
+            >
+              <Send className="w-3.5 h-3.5 mr-1.5" />
+              Send Test Notification
+            </Button>
+          </div>
+
+          {/* Granular Preference Toggles */}
+          <div className="pt-3 border-t border-nimbus-200 dark:border-nimbus-800">
+            <h4 className="text-xs font-semibold text-nimbus-500 uppercase tracking-wider mb-3">
+              Notification Triggers
+            </h4>
+
+            <div className="space-y-3">
+              {/* Due Dates */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-4 h-4 text-brand-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Due Date Alerts
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Get notified when tasks are due within 24 hours
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.dueDates !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('dueDates', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Reminders */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Task Reminders
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Periodic background reminders for upcoming deadlines
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.reminders !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('reminders', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Assignments */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <UserCheck className="w-4 h-4 text-indigo-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Task Assignments
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Notify when a new task is created or assigned to you
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.assignments !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('assignments', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Completed Tasks */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <CheckCheck className="w-4 h-4 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Completed Tasks
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Receive celebration alerts when tasks are completed
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.completed !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('completed', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Overdue Tasks */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="w-4 h-4 text-rose-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Overdue Warnings
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Alerts when tasks pass their due date without completion
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.overdue !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('overdue', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* iOS & Mobile Safari Instructions Note */}
+          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-900/50 text-blue-900 dark:text-blue-200 text-xs">
+            <Smartphone className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
+            <div>
+              <span className="font-semibold">iPhone & Mobile Safari Support:</span> On iOS 16.4+, tap the
+              Safari Share icon <span className="font-mono font-bold">[⎋]</span> &gt;{' '}
+              <span className="font-semibold">"Add to Home Screen"</span>. Launch TaskFlow from your home screen
+              to receive push notifications.
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Profile */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.15 }}
         className="nimbus-card"
       >
         <div className="px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800">

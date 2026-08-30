@@ -1,4 +1,5 @@
 import Task from '../models/Task.js';
+import { sendTaskNotification } from '../services/notificationService.js';
 
 /**
  * @desc    Get all tasks for logged in user with search, filter, sort
@@ -9,15 +10,21 @@ export const getTasks = async (req, res) => {
   try {
     const { search, status, priority, sortBy = 'dueDate', order = 'asc' } = req.query;
 
-    const filter = { userId: req.user._id };
+    const filter = {
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    };
 
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
 
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+      filter.$and = [
+        {
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } },
+          ],
+        },
       ];
     }
 
@@ -49,12 +56,15 @@ export const getTasks = async (req, res) => {
 export const getTaskStats = async (req, res) => {
   try {
     const userId = req.user._id;
+    const filter = {
+      $or: [{ userId }, { assignedTo: userId }],
+    };
 
     const [total, completed, pending, inProgress] = await Promise.all([
-      Task.countDocuments({ userId }),
-      Task.countDocuments({ userId, status: 'Completed' }),
-      Task.countDocuments({ userId, status: 'Pending' }),
-      Task.countDocuments({ userId, status: 'In Progress' }),
+      Task.countDocuments(filter),
+      Task.countDocuments({ ...filter, status: 'Completed' }),
+      Task.countDocuments({ ...filter, status: 'Pending' }),
+      Task.countDocuments({ ...filter, status: 'In Progress' }),
     ]);
 
     const completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -84,7 +94,10 @@ export const getTaskStats = async (req, res) => {
  */
 export const getTask = async (req, res) => {
   try {
-    const task = await Task.findOne({ _id: req.params.id, userId: req.user._id });
+    const task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    });
 
     if (!task) {
       return res.status(404).json({
@@ -112,7 +125,7 @@ export const getTask = async (req, res) => {
  */
 export const createTask = async (req, res) => {
   try {
-    const { title, description, status, priority, dueDate } = req.body;
+    const { title, description, status, priority, dueDate, assignedTo } = req.body;
 
     const task = await Task.create({
       title,
@@ -121,7 +134,17 @@ export const createTask = async (req, res) => {
       priority,
       dueDate: dueDate || null,
       userId: req.user._id,
+      assignedTo: assignedTo || req.user._id,
     });
+
+    // Asynchronously trigger assignment notification
+    const recipientId = task.assignedTo || task.userId;
+    sendTaskNotification({
+      type: 'assignment',
+      task,
+      userId: recipientId,
+      initiatorName: req.user.name,
+    }).catch((err) => console.error('[Task] Push notification error on create:', err.message));
 
     res.status(201).json({
       success: true,
@@ -143,7 +166,10 @@ export const createTask = async (req, res) => {
  */
 export const updateTask = async (req, res) => {
   try {
-    let task = await Task.findOne({ _id: req.params.id, userId: req.user._id });
+    let task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    });
 
     if (!task) {
       return res.status(404).json({
@@ -152,7 +178,9 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    const { title, description, status, priority, dueDate } = req.body;
+    const prevStatus = task.status;
+    const prevAssignedTo = task.assignedTo?.toString();
+    const { title, description, status, priority, dueDate, assignedTo } = req.body;
 
     task = await Task.findByIdAndUpdate(
       req.params.id,
@@ -162,9 +190,31 @@ export const updateTask = async (req, res) => {
         status: status ?? task.status,
         priority: priority ?? task.priority,
         dueDate: dueDate !== undefined ? dueDate : task.dueDate,
+        assignedTo: assignedTo !== undefined ? assignedTo : task.assignedTo,
       },
       { new: true, runValidators: true }
     );
+
+    // Asynchronously trigger notification for completion
+    if (status === 'Completed' && prevStatus !== 'Completed') {
+      const recipientId = task.assignedTo || task.userId;
+      sendTaskNotification({
+        type: 'completed',
+        task,
+        userId: recipientId,
+        initiatorName: req.user.name,
+      }).catch((err) => console.error('[Task] Push notification error on complete:', err.message));
+    }
+
+    // Asynchronously trigger notification if reassigned
+    if (assignedTo && assignedTo.toString() !== prevAssignedTo) {
+      sendTaskNotification({
+        type: 'assignment',
+        task,
+        userId: assignedTo,
+        initiatorName: req.user.name,
+      }).catch((err) => console.error('[Task] Push notification error on reassign:', err.message));
+    }
 
     res.json({
       success: true,

@@ -34,6 +34,20 @@ const taskSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true,
+    },
+    reminderSentAt: {
+      type: Date,
+      default: null,
+    },
+    overdueSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -42,6 +56,7 @@ const taskSchema = new mongoose.Schema(
 
 // Compound index for efficient user task queries
 taskSchema.index({ userId: 1, status: 1, priority: 1, dueDate: 1 });
+taskSchema.index({ dueDate: 1, status: 1 });
 
 const Task = mongoose.model('Task', taskSchema);
 

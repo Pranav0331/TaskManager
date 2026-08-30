@@ -7,6 +7,8 @@ import connectDB from './config/db.js';
 import { verifyEmailConnection } from './utils/email.js';
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import startNotificationScheduler from './services/taskNotificationScheduler.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 // Global error handlers to prevent unhandled crashes
@@ -21,6 +23,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // Database & email connection
 connectDB();
 verifyEmailConnection();
+startNotificationScheduler();
 
 const app = express();
 
@@ -83,6 +86,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // =========================
 // Error Handling
