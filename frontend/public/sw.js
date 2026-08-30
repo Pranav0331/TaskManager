@@ -38,7 +38,8 @@ self.addEventListener('push', (event) => {
     body: data.body || '',
     icon: data.icon || '/favicon.svg',
     badge: data.badge || '/favicon.svg',
-    tag: data.tag || 'taskflow-notification',
+    tag: data.tag ? `${data.tag}-${Date.now()}` : `taskflow-${Date.now()}`,
+    renotify: true,
     data: data.data || { url: '/dashboard' },
     vibrate: data.vibrate || [100, 50, 100],
     actions: data.actions || [

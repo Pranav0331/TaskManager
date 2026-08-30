@@ -28,6 +28,14 @@ const userSchema = new mongoose.Schema(
         type: Boolean,
         default: true,
       },
+      created: {
+        type: Boolean,
+        default: true,
+      },
+      updated: {
+        type: Boolean,
+        default: true,
+      },
       dueDates: {
         type: Boolean,
         default: true,

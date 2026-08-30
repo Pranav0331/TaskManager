@@ -16,6 +16,8 @@ import {
   CheckCheck,
   Smartphone,
   Loader2,
+  PlusCircle,
+  Edit3,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -30,6 +32,7 @@ const SettingsPage = () => {
     isSupported,
     permission,
     isSubscribed,
+    activeSubscriptionsCount,
     loading: pushLoading,
     actionLoading,
     preferences,
@@ -60,7 +63,9 @@ const SettingsPage = () => {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          Active & Subscribed
+          {activeSubscriptionsCount > 1
+            ? `Active on ${activeSubscriptionsCount} Devices`
+            : 'Active & Subscribed'}
         </span>
       );
     }
@@ -101,10 +106,10 @@ const SettingsPage = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-nimbus-900 dark:text-white">
-                Push Notifications
+                Multi-Device Push Notifications
               </h3>
               <p className="text-xs text-nimbus-500">
-                Receive background alerts even when the tab is closed
+                Dispatched to all your active devices (Mac, iPhone, Android, PC)
               </p>
             </div>
           </div>
@@ -116,11 +121,11 @@ const SettingsPage = () => {
           <div className="flex items-center justify-between p-4 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800/60">
             <div>
               <p className="text-sm font-semibold text-nimbus-900 dark:text-white">
-                Enable Notifications
+                Enable Notifications on this Device
               </p>
               <p className="text-xs text-nimbus-500 mt-0.5">
                 {isSubscribed
-                  ? 'Notifications are currently active for this browser'
+                  ? 'This device is registered and receives real-time task alerts'
                   : 'Allow this device to receive task updates and reminders'}
               </p>
             </div>
@@ -152,7 +157,7 @@ const SettingsPage = () => {
           <div className="flex items-center justify-between pt-1">
             <div>
               <p className="text-sm font-medium text-nimbus-900 dark:text-white">Test Delivery</p>
-              <p className="text-xs text-nimbus-500">Send an instant test alert to this browser</p>
+              <p className="text-xs text-nimbus-500">Send an instant test alert to ALL your registered devices</p>
             </div>
             <Button
               variant="secondary"
@@ -169,10 +174,98 @@ const SettingsPage = () => {
           {/* Granular Preference Toggles */}
           <div className="pt-3 border-t border-nimbus-200 dark:border-nimbus-800">
             <h4 className="text-xs font-semibold text-nimbus-500 uppercase tracking-wider mb-3">
-              Notification Triggers
+              Notification Triggers (Delivered to all devices)
             </h4>
 
             <div className="space-y-3">
+              {/* Task Creation */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <PlusCircle className="w-4 h-4 text-sky-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Task Created
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Notify all devices whenever a new task is created
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.created !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('created', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Task Updates */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <Edit3 className="w-4 h-4 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Task Updates
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Notify all devices when a task is edited or updated
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.updated !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('updated', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Completed Tasks */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <CheckCheck className="w-4 h-4 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Completed Tasks
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Receive celebration alerts across devices when tasks are marked Completed
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.completed !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('completed', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
+              {/* Assignments */}
+              <div className="flex items-center justify-between py-1.5">
+                <div className="flex items-center gap-3">
+                  <UserCheck className="w-4 h-4 text-indigo-500" />
+                  <div>
+                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
+                      Task Assignments
+                    </p>
+                    <p className="text-xs text-nimbus-500">
+                      Notify when a task is assigned or reassigned
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.assignments !== false}
+                  disabled={!isSubscribed}
+                  onChange={(e) => updatePreference('assignments', e.target.checked)}
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                />
+              </div>
+
               {/* Due Dates */}
               <div className="flex items-center justify-between py-1.5">
                 <div className="flex items-center gap-3">
@@ -213,50 +306,6 @@ const SettingsPage = () => {
                   checked={preferences.reminders !== false}
                   disabled={!isSubscribed}
                   onChange={(e) => updatePreference('reminders', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
-                />
-              </div>
-
-              {/* Assignments */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <UserCheck className="w-4 h-4 text-indigo-500" />
-                  <div>
-                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
-                      Task Assignments
-                    </p>
-                    <p className="text-xs text-nimbus-500">
-                      Notify when a new task is created or assigned to you
-                    </p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.assignments !== false}
-                  disabled={!isSubscribed}
-                  onChange={(e) => updatePreference('assignments', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
-                />
-              </div>
-
-              {/* Completed Tasks */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <CheckCheck className="w-4 h-4 text-emerald-500" />
-                  <div>
-                    <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
-                      Completed Tasks
-                    </p>
-                    <p className="text-xs text-nimbus-500">
-                      Receive celebration alerts when tasks are completed
-                    </p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={preferences.completed !== false}
-                  disabled={!isSubscribed}
-                  onChange={(e) => updatePreference('completed', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
               </div>

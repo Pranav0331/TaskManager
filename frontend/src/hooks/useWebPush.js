@@ -21,10 +21,13 @@ export const useWebPush = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [activeSubscriptionsCount, setActiveSubscriptionsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [preferences, setPreferences] = useState({
     enabled: true,
+    created: true,
+    updated: true,
     dueDates: true,
     reminders: true,
     assignments: true,
@@ -62,6 +65,9 @@ export const useWebPush = () => {
         const prefRes = await notificationService.getPreferences();
         if (prefRes?.data?.preferences) {
           setPreferences(prefRes.data.preferences);
+        }
+        if (prefRes?.data?.activeSubscriptionsCount !== undefined) {
+          setActiveSubscriptionsCount(prefRes.data.activeSubscriptionsCount);
         }
       } catch (err) {
         // Quiet fallback if not logged in yet
@@ -194,6 +200,7 @@ export const useWebPush = () => {
     isSupported,
     permission,
     isSubscribed,
+    activeSubscriptionsCount,
     loading,
     actionLoading,
     preferences,
