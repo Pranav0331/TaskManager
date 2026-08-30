@@ -7,6 +7,8 @@ import {
   getPreferences,
   updatePreferences,
   triggerDeadlineCheck,
+  getRegisteredDevices,
+  removeDevice,
 } from '../controllers/notificationController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -21,6 +23,8 @@ router.post('/unsubscribe', protect, unsubscribe);
 router.post('/test', protect, sendTestNotification);
 router.get('/preferences', protect, getPreferences);
 router.put('/preferences', protect, updatePreferences);
+router.get('/devices', protect, getRegisteredDevices);
+router.delete('/devices/:id', protect, removeDevice);
 router.post('/check-deadlines', protect, triggerDeadlineCheck);
 
 export default router;

@@ -62,6 +62,22 @@ export const notificationService = {
     const response = await api.post('/notifications/check-deadlines');
     return response.data;
   },
+
+  /**
+   * Get list of all registered push devices
+   */
+  getRegisteredDevices: async () => {
+    const response = await api.get('/notifications/devices');
+    return response.data;
+  },
+
+  /**
+   * Remove/revoke a registered push device
+   */
+  removeDevice: async (id) => {
+    const response = await api.delete(`/notifications/devices/${id}`);
+    return response.data;
+  },
 };
 
 export default notificationService;

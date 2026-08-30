@@ -22,6 +22,8 @@ export const useWebPush = () => {
   const [permission, setPermission] = useState('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [activeSubscriptionsCount, setActiveSubscriptionsCount] = useState(0);
+  const [devices, setDevices] = useState([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [preferences, setPreferences] = useState({
@@ -34,6 +36,22 @@ export const useWebPush = () => {
     completed: true,
     overdue: true,
   });
+
+  // Fetch list of registered devices
+  const fetchDevices = useCallback(async () => {
+    try {
+      setDevicesLoading(true);
+      const res = await notificationService.getRegisteredDevices();
+      if (res?.data?.devices) {
+        setDevices(res.data.devices);
+        setActiveSubscriptionsCount(res.data.total || res.data.devices.length);
+      }
+    } catch (err) {
+      console.error('[WebPush] Error fetching registered devices:', err);
+    } finally {
+      setDevicesLoading(false);
+    }
+  }, []);
 
   // Check browser support and current subscription status
   const checkStatus = useCallback(async () => {
@@ -60,7 +78,7 @@ export const useWebPush = () => {
       const subscription = await registration.pushManager.getSubscription();
       setIsSubscribed(!!subscription);
 
-      // Fetch user preferences from backend
+      // Fetch user preferences and registered devices from backend
       try {
         const prefRes = await notificationService.getPreferences();
         if (prefRes?.data?.preferences) {
@@ -69,6 +87,7 @@ export const useWebPush = () => {
         if (prefRes?.data?.activeSubscriptionsCount !== undefined) {
           setActiveSubscriptionsCount(prefRes.data.activeSubscriptionsCount);
         }
+        await fetchDevices();
       } catch (err) {
         // Quiet fallback if not logged in yet
       }
@@ -77,7 +96,7 @@ export const useWebPush = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchDevices]);
 
   useEffect(() => {
     checkStatus();
@@ -132,7 +151,8 @@ export const useWebPush = () => {
       await notificationService.subscribe(subscription);
 
       setIsSubscribed(true);
-      toast.success('Push notifications successfully enabled!');
+      toast.success('Push notifications enabled on this device!');
+      await fetchDevices();
       return true;
     } catch (error) {
       console.error('[WebPush] Subscription error:', error);
@@ -156,7 +176,8 @@ export const useWebPush = () => {
       }
 
       setIsSubscribed(false);
-      toast.success('Push notifications disabled.');
+      toast.success('Push notifications disabled on this device.');
+      await fetchDevices();
       return true;
     } catch (error) {
       console.error('[WebPush] Unsubscribe error:', error);
@@ -167,12 +188,35 @@ export const useWebPush = () => {
     }
   };
 
+  // Remove a specific device from backend
+  const removeDevice = async (deviceId, endpoint) => {
+    try {
+      await notificationService.removeDevice(deviceId);
+      toast.success('Device removed successfully');
+
+      // If current device was removed, unsubscribe locally too
+      if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        const sub = await registration.pushManager.getSubscription();
+        if (sub && sub.endpoint === endpoint) {
+          await sub.unsubscribe();
+          setIsSubscribed(false);
+        }
+      }
+
+      await fetchDevices();
+    } catch (error) {
+      console.error('[WebPush] Error removing device:', error);
+      toast.error(error.response?.data?.message || 'Failed to remove device');
+    }
+  };
+
   // Trigger test notification
   const sendTestNotification = async () => {
     setActionLoading(true);
     try {
       await notificationService.sendTestNotification();
-      toast.success('Test notification dispatched! Check your system banner.');
+      toast.success('Test notification dispatched to all registered devices!');
     } catch (error) {
       console.error('[WebPush] Test error:', error);
       toast.error(error.response?.data?.message || 'Failed to send test notification');
@@ -201,11 +245,15 @@ export const useWebPush = () => {
     permission,
     isSubscribed,
     activeSubscriptionsCount,
+    devices,
+    devicesLoading,
     loading,
     actionLoading,
     preferences,
     subscribeUser,
     unsubscribeUser,
+    removeDevice,
+    fetchDevices,
     sendTestNotification,
     updatePreference,
     refreshStatus: checkStatus,

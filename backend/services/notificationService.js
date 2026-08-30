@@ -3,7 +3,65 @@ import PushSubscription from '../models/PushSubscription.js';
 import User from '../models/User.js';
 
 /**
- * Send a web push notification payload to ALL active push subscriptions of a user across all devices (Mac, iPhone, Android, PC, etc.)
+ * Format a Date object into a readable date & time string
+ * Example: "Aug 30, 2026 at 5:00 PM"
+ */
+export const formatNotificationDate = (date) => {
+  if (!date) return 'No due date';
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return String(date);
+
+    const datePart = d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    const timePart = d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    // If time is 00:00 (midnight / date-only input), only display date
+    if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
+      return datePart;
+    }
+
+    return `${datePart} at ${timePart}`;
+  } catch (e) {
+    return String(date);
+  }
+};
+
+/**
+ * Calculate human-readable overdue duration
+ * Example: "2 hours", "3 days", "45 minutes"
+ */
+export const formatOverdueDuration = (dueDate) => {
+  if (!dueDate) return 'recently';
+  const diffMs = Date.now() - new Date(dueDate).getTime();
+  if (diffMs <= 0) return 'a few moments';
+
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) {
+    return `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+  }
+  if (diffHours > 0) {
+    return `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
+  }
+  if (diffMins > 0) {
+    return `${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+  }
+  return 'a few moments';
+};
+
+/**
+ * Send a web push notification payload to ALL active push subscriptions of a user across all devices
  * @param {string|mongoose.Types.ObjectId} userId
  * @param {Object} payload
  * @returns {Promise<{ sent: number, failed: number, removed: number }>}
@@ -21,7 +79,7 @@ export const sendPushToUser = async (userId, payload) => {
       return { sent: 0, failed: 0, removed: 0 };
     }
 
-    console.log(`[Push] Delivering notification to ${subscriptions.length} registered device(s) for user ${userId}`);
+    console.log(`[Push] Delivering notification "${payload.title}" to ${subscriptions.length} registered device(s) for user ${userId}`);
 
     const payloadString = JSON.stringify({
       title: payload.title || 'TaskFlow Notification',
@@ -41,7 +99,7 @@ export const sendPushToUser = async (userId, payload) => {
       actions: payload.actions || [
         {
           action: 'open',
-          title: 'Open App',
+          title: 'Open Task',
         },
       ],
     });
@@ -93,17 +151,19 @@ export const sendPushToUser = async (userId, payload) => {
 };
 
 /**
- * Dispatch task-related push notifications to all devices of target users
+ * Dispatch dynamic task-specific push notifications to all devices of target users
  * @param {Object} options
  * @param {string} options.type - 'created' | 'updated' | 'completed' | 'assignment' | 'reminder' | 'overdue' | 'deleted' | 'test'
  * @param {Object} options.task - Task mongoose document or object
  * @param {string|string[]} options.userId - Recipient user ID or array of user IDs
  * @param {string} [options.initiatorName] - Optional name of the user triggering the action
- * @param {string} [options.customMessage] - Optional custom message body
+ * @param {string} [options.customMessage] - Optional custom message body override
  */
 export const sendTaskNotification = async ({ type, task, userId, initiatorName, customMessage }) => {
   try {
     const userIds = Array.isArray(userId) ? Array.from(new Set(userId)) : [userId];
+    const taskTitle = task?.title || 'Untitled Task';
+    const formattedDueDate = task?.dueDate ? formatNotificationDate(task.dueDate) : null;
 
     for (const uId of userIds) {
       if (!uId) continue;
@@ -117,97 +177,114 @@ export const sendTaskNotification = async ({ type, task, userId, initiatorName, 
       let payload = null;
 
       switch (type) {
-        case 'created':
-          if (prefs.created === false) continue;
-          payload = {
-            title: '✨ New Task Created',
-            body: customMessage || `Task "${task.title}" has been created.`,
-            tag: `task-created-${task._id}`,
-            type: 'created',
-            taskId: task._id,
-            url: `/tasks/${task._id}`,
-            actions: [{ action: 'open_task', title: 'View Task' }],
-          };
-          break;
-
-        case 'updated':
-          if (prefs.updated === false) continue;
-          payload = {
-            title: '📝 Task Updated',
-            body: customMessage || `"${task.title}" details have been updated.`,
-            tag: `task-updated-${task._id}`,
-            type: 'updated',
-            taskId: task._id,
-            url: `/tasks/${task._id}`,
-            actions: [{ action: 'open_task', title: 'View Task' }],
-          };
-          break;
-
-        case 'assignment':
-          if (prefs.assignments === false) continue;
-          payload = {
-            title: '📋 Task Assigned',
-            body: customMessage || (initiatorName
-              ? `${initiatorName} assigned you task "${task.title}"`
-              : `You have been assigned task "${task.title}"`),
-            tag: `task-assign-${task._id}`,
-            type: 'assignment',
-            taskId: task._id,
-            url: `/tasks/${task._id}`,
-            actions: [{ action: 'open_task', title: 'View Task' }],
-          };
-          break;
-
+        // 1. Task Completed
         case 'completed':
           if (prefs.completed === false) continue;
           payload = {
-            title: '🎉 Task Completed!',
-            body: customMessage || `Great job! "${task.title}" has been marked as Completed.`,
-            tag: `task-completed-${task._id}`,
+            title: `✅ Task Completed — ${taskTitle}`,
+            body: customMessage || 'You completed this task successfully.',
+            tag: `task-completed-${task?._id || 'done'}`,
             type: 'completed',
-            taskId: task._id,
-            url: `/tasks/${task._id}`,
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
             actions: [{ action: 'open_task', title: 'View Task' }],
           };
           break;
 
+        // 2. Due Date Reminder
         case 'reminder':
         case 'due_date':
           if (prefs.dueDates === false && prefs.reminders === false) continue;
           payload = {
-            title: '⏰ Task Due Soon',
-            body: customMessage || `"${task.title}" is due today or approaching its deadline.`,
-            tag: `task-due-${task._id}`,
+            title: `⏰ Task Due Soon — ${taskTitle}`,
+            body: customMessage || (formattedDueDate
+              ? `Due: ${formattedDueDate}`
+              : 'This task is approaching its deadline.'),
+            tag: `task-due-${task?._id || 'due'}`,
             type: 'due_date',
-            taskId: task._id,
-            url: `/tasks/${task._id}`,
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
             actions: [{ action: 'open_task', title: 'View Task' }],
           };
           break;
 
+        // 3. Overdue Task Warning
         case 'overdue':
           if (prefs.overdue === false) continue;
+          const overdueDuration = task?.dueDate ? formatOverdueDuration(task.dueDate) : 'recently';
           payload = {
-            title: '⚠️ Task Overdue',
-            body: customMessage || `"${task.title}" is past its due date and still pending.`,
-            tag: `task-overdue-${task._id}`,
+            title: `⚠️ Task Overdue — ${taskTitle}`,
+            body: customMessage || (formattedDueDate
+              ? `Overdue by ${overdueDuration} (Due: ${formattedDueDate})`
+              : `This task is overdue by ${overdueDuration}.`),
+            tag: `task-overdue-${task?._id || 'overdue'}`,
             type: 'overdue',
-            taskId: task._id,
-            url: `/tasks/${task._id}`,
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
             actions: [{ action: 'open_task', title: 'View Task' }],
           };
           break;
 
+        // 4. Task Assignment
+        case 'assignment':
+          if (prefs.assignments === false) continue;
+          payload = {
+            title: `👤 New Task Assigned — ${taskTitle}`,
+            body: customMessage || (initiatorName
+              ? `Assigned to you by ${initiatorName}.`
+              : 'You have been assigned this task.'),
+            tag: `task-assign-${task?._id || 'assign'}`,
+            type: 'assignment',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 5. Task Created
+        case 'created':
+          if (prefs.created === false) continue;
+          payload = {
+            title: `✨ New Task Created — ${taskTitle}`,
+            body: customMessage || (formattedDueDate
+              ? `Priority: ${task?.priority || 'Medium'} | Due: ${formattedDueDate}`
+              : `Priority: ${task?.priority || 'Medium'}`),
+            tag: `task-created-${task?._id || 'created'}`,
+            type: 'created',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 6. Task Updated
+        case 'updated':
+          if (prefs.updated === false) continue;
+          payload = {
+            title: `📝 Task Updated — ${taskTitle}`,
+            body: customMessage || (formattedDueDate
+              ? `Status: ${task?.status || 'Pending'} | Priority: ${task?.priority || 'Medium'} | Due: ${formattedDueDate}`
+              : `Status: ${task?.status || 'Pending'} | Priority: ${task?.priority || 'Medium'}`),
+            tag: `task-updated-${task?._id || 'updated'}`,
+            type: 'updated',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 7. Task Deleted
         case 'deleted':
           payload = {
-            title: '🗑️ Task Deleted',
-            body: `Task "${task.title}" was removed.`,
-            tag: `task-deleted-${task._id}`,
+            title: `🗑️ Task Deleted — ${taskTitle}`,
+            body: customMessage || `Task "${taskTitle}" was removed.`,
+            tag: `task-deleted-${task?._id || 'deleted'}`,
             type: 'deleted',
             url: '/tasks',
           };
           break;
 
+        // 8. Test Notification
         case 'test':
           payload = {
             title: '🔔 Test Notification from TaskFlow',

@@ -224,6 +224,136 @@ export const updatePreferences = async (req, res) => {
 };
 
 /**
+ * Utility to parse user-agent into clean Browser and OS names
+ */
+function parseUserAgent(ua) {
+  if (!ua) return { browser: 'Web Browser', os: 'Device', deviceType: 'desktop' };
+
+  let browser = 'Browser';
+  let os = 'Device';
+  let deviceType = 'desktop';
+
+  // Detect OS
+  if (/iphone/i.test(ua)) {
+    os = 'iPhone';
+    deviceType = 'mobile';
+  } else if (/ipad/i.test(ua)) {
+    os = 'iPad';
+    deviceType = 'tablet';
+  } else if (/macintosh|mac os x/i.test(ua)) {
+    os = 'Mac';
+    deviceType = 'desktop';
+  } else if (/android/i.test(ua)) {
+    os = 'Android';
+    deviceType = 'mobile';
+  } else if (/windows nt/i.test(ua)) {
+    os = 'Windows';
+    deviceType = 'desktop';
+  } else if (/linux/i.test(ua)) {
+    os = 'Linux';
+    deviceType = 'desktop';
+  } else if (/cros/i.test(ua)) {
+    os = 'Chrome OS';
+    deviceType = 'desktop';
+  }
+
+  // Detect Browser
+  if (/edg/i.test(ua)) {
+    browser = 'Edge';
+  } else if (/opr\//i.test(ua) || /opera/i.test(ua)) {
+    browser = 'Opera';
+  } else if (/brave/i.test(ua)) {
+    browser = 'Brave';
+  } else if (/chrome|crios/i.test(ua) && !/edg/i.test(ua)) {
+    browser = 'Chrome';
+  } else if (/firefox|fxios/i.test(ua)) {
+    browser = 'Firefox';
+  } else if (/safari/i.test(ua) && !/chrome|crios|android/i.test(ua)) {
+    browser = 'Safari';
+  }
+
+  return { browser, os, deviceType };
+}
+
+/**
+ * @desc    Get list of all registered push devices for the user
+ * @route   GET /api/notifications/devices
+ * @access  Private
+ */
+export const getRegisteredDevices = async (req, res) => {
+  try {
+    const subscriptions = await PushSubscription.find({ userId: req.user._id }).sort({ updatedAt: -1 });
+    const currentUA = req.headers['user-agent'] || '';
+
+    const devices = subscriptions.map((sub) => {
+      const { browser, os, deviceType } = parseUserAgent(sub.userAgent);
+      const isCurrentDevice = sub.userAgent === currentUA;
+
+      return {
+        id: sub._id,
+        browser,
+        os,
+        deviceName: `${browser} · ${os}`,
+        deviceType,
+        isCurrentDevice,
+        endpoint: sub.endpoint,
+        createdAt: sub.createdAt,
+        lastActiveAt: sub.updatedAt || sub.createdAt,
+        active: true,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        devices,
+        total: devices.length,
+      },
+    });
+  } catch (error) {
+    console.error('[Notification Controller] Get registered devices error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch registered devices',
+    });
+  }
+};
+
+/**
+ * @desc    Remove/revoke a specific registered push device
+ * @route   DELETE /api/notifications/devices/:id
+ * @access  Private
+ */
+export const removeDevice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await PushSubscription.findOneAndDelete({
+      _id: id,
+      userId: req.user._id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Device subscription not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Device removed successfully',
+      data: { id },
+    });
+  } catch (error) {
+    console.error('[Notification Controller] Remove device error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to remove device',
+    });
+  }
+};
+
+/**
  * @desc    Manually trigger checking task deadlines (for immediate testing/admin)
  * @route   POST /api/notifications/check-deadlines
  * @access  Private

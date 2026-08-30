@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sun,
@@ -15,29 +16,42 @@ import {
   UserCheck,
   CheckCheck,
   Smartphone,
+  Laptop,
+  Tablet,
+  Trash2,
   Loader2,
   PlusCircle,
   Edit3,
+  ChevronRight,
+  Monitor,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { formatDateTime } from '../utils/constants';
 import useWebPush from '../hooks/useWebPush';
 import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
 
 const SettingsPage = () => {
   const { user } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
+  const [devicesModalOpen, setDevicesModalOpen] = useState(false);
+  const [removingDeviceId, setRemovingDeviceId] = useState(null);
+
   const {
     isSupported,
     permission,
     isSubscribed,
     activeSubscriptionsCount,
+    devices,
+    devicesLoading,
     loading: pushLoading,
     actionLoading,
     preferences,
     subscribeUser,
     unsubscribeUser,
+    removeDevice,
+    fetchDevices,
     sendTestNotification,
     updatePreference,
   } = useWebPush();
@@ -50,6 +64,33 @@ const SettingsPage = () => {
     }
   };
 
+  const handleOpenDevicesModal = () => {
+    fetchDevices();
+    setDevicesModalOpen(true);
+  };
+
+  const handleRemoveDevice = async (device) => {
+    setRemovingDeviceId(device.id);
+    try {
+      await removeDevice(device.id, device.endpoint);
+    } finally {
+      setRemovingDeviceId(null);
+    }
+  };
+
+  const getDeviceIcon = (deviceType, os) => {
+    if (deviceType === 'mobile' || /iphone|android/i.test(os)) {
+      return <Smartphone className="w-5 h-5 text-indigo-500" />;
+    }
+    if (deviceType === 'tablet' || /ipad/i.test(os)) {
+      return <Tablet className="w-5 h-5 text-purple-500" />;
+    }
+    if (/mac/i.test(os)) {
+      return <Laptop className="w-5 h-5 text-brand-500" />;
+    }
+    return <Monitor className="w-5 h-5 text-sky-500" />;
+  };
+
   const getPermissionBadge = () => {
     if (!isSupported) {
       return (
@@ -59,14 +100,26 @@ const SettingsPage = () => {
         </span>
       );
     }
-    if (permission === 'granted' && isSubscribed) {
+    if (permission === 'granted' && (isSubscribed || activeSubscriptionsCount > 0)) {
+      const label =
+        activeSubscriptionsCount > 1
+          ? `Active on ${activeSubscriptionsCount} Devices`
+          : 'Active & Subscribed';
+
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          {activeSubscriptionsCount > 1
-            ? `Active on ${activeSubscriptionsCount} Devices`
-            : 'Active & Subscribed'}
-        </span>
+        <button
+          type="button"
+          onClick={handleOpenDevicesModal}
+          title="Click to view all registered devices"
+          className="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400 transition-all cursor-pointer shadow-sm active:scale-95"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>{label}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+        </button>
       );
     }
     if (permission === 'denied') {
@@ -153,22 +206,34 @@ const SettingsPage = () => {
             </button>
           </div>
 
-          {/* Test Notification Button */}
-          <div className="flex items-center justify-between pt-1">
+          {/* Test Notification Button & Manage Devices Link */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
             <div>
               <p className="text-sm font-medium text-nimbus-900 dark:text-white">Test Delivery</p>
               <p className="text-xs text-nimbus-500">Send an instant test alert to ALL your registered devices</p>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={!isSubscribed || actionLoading}
-              onClick={sendTestNotification}
-              loading={actionLoading}
-            >
-              <Send className="w-3.5 h-3.5 mr-1.5" />
-              Send Test Notification
-            </Button>
+            <div className="flex items-center gap-2">
+              {activeSubscriptionsCount > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleOpenDevicesModal}
+                >
+                  Manage Devices ({activeSubscriptionsCount})
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!isSubscribed && activeSubscriptionsCount === 0}
+                onClick={sendTestNotification}
+                loading={actionLoading}
+              >
+                <Send className="w-3.5 h-3.5 mr-1.5" />
+                Send Test Notification
+              </Button>
+            </div>
           </div>
 
           {/* Granular Preference Toggles */}
@@ -194,7 +259,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.created !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('created', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -216,7 +281,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.updated !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('updated', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -238,7 +303,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.completed !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('completed', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -260,7 +325,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.assignments !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('assignments', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -282,7 +347,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.dueDates !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('dueDates', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -304,7 +369,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.reminders !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('reminders', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -326,7 +391,7 @@ const SettingsPage = () => {
                 <input
                   type="checkbox"
                   checked={preferences.overdue !== false}
-                  disabled={!isSubscribed}
+                  disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('overdue', e.target.checked)}
                   className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
                 />
@@ -346,6 +411,90 @@ const SettingsPage = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Registered Devices Modal */}
+      <Modal
+        isOpen={devicesModalOpen}
+        onClose={() => setDevicesModalOpen(false)}
+        title="Registered Push Devices"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-nimbus-500">
+            These devices are currently subscribed to receive real-time push notifications for your account.
+          </p>
+
+          {devicesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+            </div>
+          ) : devices.length === 0 ? (
+            <div className="text-center py-8 bg-nimbus-50 dark:bg-nimbus-800/40 rounded-xl p-6">
+              <Smartphone className="w-8 h-8 text-nimbus-400 mx-auto mb-2" />
+              <p className="text-sm font-medium text-nimbus-700 dark:text-nimbus-300">
+                No Registered Devices
+              </p>
+              <p className="text-xs text-nimbus-500 mt-1">
+                Toggle "Enable Notifications" on this device or log in from another device to subscribe.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              {devices.map((device) => (
+                <div
+                  key={device.id}
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/50 border border-nimbus-200/70 dark:border-nimbus-800"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-nimbus-900 border border-nimbus-200 dark:border-nimbus-700 shadow-2xs">
+                      {getDeviceIcon(device.deviceType, device.os)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate">
+                          {device.deviceName}
+                        </p>
+                        {device.isCurrentDevice && (
+                          <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                            This Device
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-xs text-nimbus-500 mt-0.5">
+                        Last Active: {formatDateTime(device.lastActiveAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={removingDeviceId === device.id}
+                    onClick={() => handleRemoveDevice(device)}
+                    title="Remove device subscription"
+                    className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors disabled:opacity-50 cursor-pointer ml-2 flex-shrink-0"
+                  >
+                    {removingDeviceId === device.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-rose-500" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-3 border-t border-nimbus-200 dark:border-nimbus-800">
+            <Button variant="secondary" size="sm" onClick={() => setDevicesModalOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Profile */}
       <motion.div
