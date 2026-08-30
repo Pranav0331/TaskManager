@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getInitials } from '../../utils/constants';
+import NotificationPanel from './NotificationPanel';
 
 const mobileNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,6 +30,7 @@ const TopBar = ({ title, subtitle }) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -58,14 +60,25 @@ const TopBar = ({ title, subtitle }) => {
             <button className="hidden sm:flex p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500">
               <Search className="w-5 h-5" />
             </button>
-            <Link
-              to="/settings"
-              title="Notification Settings"
-              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 relative"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full" />
-            </Link>
+
+            {/* Notification Bell Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                title="Notifications"
+                className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 relative transition-colors"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full" />
+              </button>
+
+              <NotificationPanel
+                isOpen={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+              />
+            </div>
+
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500"

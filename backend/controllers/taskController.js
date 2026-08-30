@@ -60,14 +60,34 @@ export const getTaskStats = async (req, res) => {
       $or: [{ userId }, { assignedTo: userId }],
     };
 
-    const [total, completed, pending, inProgress] = await Promise.all([
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      total,
+      completed,
+      pending,
+      inProgress,
+      overdue,
+      weeklyCompleted,
+      todayDue,
+      todayCompleted,
+    ] = await Promise.all([
       Task.countDocuments(filter),
       Task.countDocuments({ ...filter, status: 'Completed' }),
       Task.countDocuments({ ...filter, status: 'Pending' }),
       Task.countDocuments({ ...filter, status: 'In Progress' }),
+      Task.countDocuments({ ...filter, dueDate: { $lt: now }, status: { $ne: 'Completed' } }),
+      Task.countDocuments({ ...filter, status: 'Completed', updatedAt: { $gte: sevenDaysAgo } }),
+      Task.countDocuments({ ...filter, dueDate: { $gte: startOfToday, $lte: endOfToday } }),
+      Task.countDocuments({ ...filter, status: 'Completed', updatedAt: { $gte: startOfToday } }),
     ]);
 
     const completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const todayTotal = todayDue + todayCompleted;
+    const todayProgress = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : (completed > 0 ? completionPercentage : 0);
 
     res.json({
       success: true,
@@ -76,7 +96,15 @@ export const getTaskStats = async (req, res) => {
         completed,
         pending,
         inProgress,
+        overdue,
+        weeklyCompleted,
         completionPercentage,
+        today: {
+          due: todayDue,
+          completed: todayCompleted,
+          total: todayTotal,
+          progress: todayProgress,
+        },
       },
     });
   } catch (error) {
