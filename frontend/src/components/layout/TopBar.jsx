@@ -38,7 +38,7 @@ const TopBar = ({ title, subtitle }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
