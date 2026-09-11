@@ -24,6 +24,22 @@
   }
 }
 
+/* Smooth premium theme transition */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: background-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                fill 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 350ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-delay: 0s !important;
+  }
+}
+
 @layer components {
   .nimbus-card {
     @apply bg-white dark:bg-nimbus-900 border border-nimbus-200/80 dark:border-nimbus-800 rounded-xl shadow-nimbus;
