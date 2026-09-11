@@ -37,6 +37,27 @@ export const authService = {
     const response = await api.get('/auth/me');
     return response.data;
   },
+
+  forgotPassword: async (email) => {
+    const response = await api.post(
+      '/auth/forgot-password',
+      { email: (email || '').trim() },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return response.data;
+  },
+
+  verifyResetToken: async (token) => {
+    const response = await api.get(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+    return response.data;
+  },
+
+  resetPassword: async (data) => {
+    const response = await api.post('/auth/reset-password', data, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.data;
+  },
 };
 
 export const taskService = {

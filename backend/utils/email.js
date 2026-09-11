@@ -182,5 +182,156 @@ export const sendOTPEmail = async (email, otp) => {
   }
 };
 
+/**
+ * Send Password Reset Email to User via Brevo HTTPS Transactional API
+ * @param {string} email - Recipient email address
+ * @param {string} resetUrl - Password reset URL link
+ */
+export const sendPasswordResetEmail = async (email, resetUrl) => {
+  const rawApiKey = process.env.BREVO_API_KEY;
+  const apiKey = rawApiKey ? rawApiKey.replace(/['"]/g, '').trim() : '';
+  const sender = parseSender(process.env.EMAIL_FROM);
+  const isPlaceholder = !apiKey || apiKey === 'your_brevo_api_key_here' || apiKey === 'xkeysib-your_brevo_api_key_here';
+
+  console.log(`\n------------------------------------------------------`);
+  console.log(`🔑 [TASKFLOW PASSWORD RESET REQUEST]:`);
+  console.log(`   Email:    ${email}`);
+  console.log(`   Link:     ${resetUrl}`);
+  console.log(`   TTL:      1 hour`);
+  console.log(`------------------------------------------------------`);
+
+  if (isPlaceholder) {
+    console.log(`⚠️  [EMAIL NOT SENT]: BREVO_API_KEY not configured in backend/.env`);
+    console.log(`👉 In the meantime, use the reset link above in your browser.`);
+    console.log(`------------------------------------------------------\n`);
+    return { success: true, mode: 'dev_terminal_logged', resetUrl };
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reset your password</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="min-height: 100vh; background-color: #0f172a; padding: 40px 20px;">
+          <tr>
+            <td align="center" valign="top">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 520px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; border: 1px solid #334155; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); overflow: hidden;">
+                <!-- Header -->
+                <tr>
+                  <td style="padding: 36px 36px 24px; text-align: center; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+                    <div style="display: inline-block; width: 48px; height: 48px; line-height: 48px; background-color: rgba(255, 255, 255, 0.2); border-radius: 12px; font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 12px;">
+                      🔒
+                    </div>
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">TaskFlow</h1>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #c7d2fe;">Account Security</p>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 32px 36px;">
+                    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 600; color: #f8fafc; text-align: center;">Reset your password</h2>
+                    <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #94a3b8; text-align: center;">
+                      We received a request to reset the password for your TaskFlow account. Click the button below to choose a new password:
+                    </p>
+
+                    <!-- CTA Button -->
+                    <div style="text-align: center; margin: 30px 0;">
+                      <a href="${resetUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);">
+                        Reset Password
+                      </a>
+                    </div>
+
+                    <!-- Expiration Notice -->
+                    <p style="margin: 0 0 24px; font-size: 12px; color: #94a3b8; text-align: center;">
+                      ⏱️ This password reset link will expire in <strong>1 hour</strong>.
+                    </p>
+
+                    <!-- Alternative link -->
+                    <div style="background-color: #1e1b4b; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; word-break: break-all;">
+                      <p style="margin: 0 0 6px; font-size: 11px; color: #a5b4fc; font-weight: 600;">
+                        Or copy and paste this URL into your browser:
+                      </p>
+                      <a href="${resetUrl}" target="_blank" style="font-size: 11px; color: #818cf8; text-decoration: underline;">
+                        ${resetUrl}
+                      </a>
+                    </div>
+
+                    <!-- Security Notice -->
+                    <div style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 4px; padding: 12px 16px; margin-bottom: 24px;">
+                      <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #fbbf24;">
+                        <strong>Security note:</strong> If you did not request a password reset, you can safely ignore this email. Your password will not change.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="padding: 20px 36px; background-color: #0b0f19; border-top: 1px solid #1e293b; text-align: center;">
+                    <p style="margin: 0; font-size: 11px; color: #475569;">
+                      © ${new Date().getFullYear()} TaskFlow Inc. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  try {
+    console.log(`📨 Sending password reset email via Brevo HTTPS API to ${email}...`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender,
+        to: [{ email }],
+        subject: 'TaskFlow - Reset your password',
+        htmlContent,
+      }),
+      signal: controller.signal,
+    }).finally(() => {
+      clearTimeout(timeoutId);
+    });
+
+    const responseData = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const errorMsg = responseData.message || responseData.error || response.statusText || 'Brevo API failed to send email';
+      console.error(`❌ [BREVO API RETURNED ERROR] Status ${response.status} for ${email}: ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+
+    console.log(`✅ [PASSWORD RESET EMAIL DELIVERED] Message ID: ${responseData?.messageId} to ${email}`);
+    return { success: true, messageId: responseData?.messageId };
+  } catch (error) {
+    const isTimeout = error.name === 'AbortError';
+    const finalErrorMessage = isTimeout ? 'Brevo email API request timed out after 10 seconds' : error.message;
+
+    console.error(`\n❌ [EMAIL SENDING FAILED] Recipient: ${email}`);
+    console.error(`   Error Message: ${finalErrorMessage}`);
+    console.log(`🔑 [FALLBACK RESET LINK]: ${resetUrl}\n`);
+
+    throw new Error(`Failed to send password reset email: ${finalErrorMessage}`);
+  }
+};
+
 export default sendOTPEmail;
+
 

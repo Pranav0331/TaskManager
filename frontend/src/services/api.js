@@ -47,7 +47,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      const publicPaths = ['/login', '/register', '/verify-otp'];
+      const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password'];
       const isPublicPath = publicPaths.some((path) => window.location.pathname.startsWith(path));
       if (!isPublicPath && window.location.pathname !== '/') {
         window.location.href = '/login';
