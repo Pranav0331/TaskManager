@@ -1,20 +1,18 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CheckSquare,
   Clock,
   ListTodo,
-  TrendingUp,
   ArrowRight,
   Plus,
-  Calendar,
+  Calendar as CalendarIcon,
   AlertTriangle,
-  Target,
   Sparkles,
-  Zap,
   CheckCircle2,
   CalendarClock,
+  RotateCcw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { taskService } from '../services/taskService';
@@ -25,13 +23,15 @@ import { StatCardSkeleton } from '../components/ui/Skeleton';
 import Badge from '../components/ui/Badge';
 import { STATUS_COLORS, PRIORITY_COLORS, formatDate, isOverdue } from '../utils/constants';
 import { useAuth } from '../context/AuthContext';
+import CompactCalendar from '../components/dashboard/CompactCalendar';
+import QuickNotesCard from '../components/dashboard/QuickNotesCard';
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
-  const [recentTasks, setRecentTasks] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
   const [upcomingTasks, setUpcomingTasks] = useState([]);
-  const [todayFocusTasks, setTodayFocusTasks] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -43,37 +43,18 @@ const DashboardPage = () => {
         taskService.getTasks({ sortBy: 'dueDate', order: 'asc' }),
       ]);
 
-      const allTasks = allTasksRes.data || [];
+      const tasks = allTasksRes.data || [];
+      setAllTasks(tasks);
       setStats(statsRes.data);
 
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-      // 1. Upcoming deadlines (next 5 tasks with due dates that are pending/in progress)
-      const upcoming = allTasks
+      // Upcoming deadlines (next 5 tasks with due dates that are pending/in progress)
+      const upcoming = tasks
         .filter((t) => t.status !== 'Completed' && t.dueDate)
         .slice(0, 5);
       setUpcomingTasks(upcoming);
-
-      // 2. Today's focus (tasks due today or high priority pending)
-      const todayFocus = allTasks.filter((t) => {
-        if (t.status === 'Completed') return false;
-        if (t.dueDate) {
-          const due = new Date(t.dueDate);
-          return due <= endOfToday;
-        }
-        return t.priority === 'High';
-      }).slice(0, 4);
-      setTodayFocusTasks(todayFocus);
-
-      // 3. Recent tasks sorted by update/creation
-      const recent = [...allTasks]
-        .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
-        .slice(0, 5);
-      setRecentTasks(recent);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -108,6 +89,54 @@ const DashboardPage = () => {
       toast.error('Failed to update task');
     }
   };
+
+  const isToday = useMemo(() => {
+    if (!selectedDate) return true;
+    const today = new Date();
+    return (
+      selectedDate.getDate() === today.getDate() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear()
+    );
+  }, [selectedDate]);
+
+  // Tasks for Today's Tasks card (either filtered for selectedDate or for today)
+  const displayedTasks = useMemo(() => {
+    if (!selectedDate) return [];
+
+    const startOfDay = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate()
+    );
+    const endOfDay = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      23,
+      59,
+      59,
+      999
+    );
+
+    if (isToday) {
+      return allTasks.filter((t) => {
+        if (t.status === 'Completed') return false;
+        if (t.dueDate) {
+          const due = new Date(t.dueDate);
+          return due <= endOfDay;
+        }
+        return t.priority === 'High';
+      });
+    }
+
+    // Specific date picked
+    return allTasks.filter((t) => {
+      if (!t.dueDate) return false;
+      const due = new Date(t.dueDate);
+      return due >= startOfDay && due <= endOfDay;
+    });
+  }, [allTasks, selectedDate, isToday]);
 
   const getUrgencyBadge = (dueDate, status) => {
     if (status === 'Completed') {
@@ -153,7 +182,7 @@ const DashboardPage = () => {
     const daysLeft = Math.ceil(diffHours / 24);
     return (
       <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-nimbus-100 text-nimbus-700 dark:bg-nimbus-800 dark:text-nimbus-300">
-        In {daysLeft} days
+        In {daysLeft}d
       </span>
     );
   };
@@ -186,17 +215,14 @@ const DashboardPage = () => {
           value: stats.overdue || 0,
           icon: AlertTriangle,
           color: stats.overdue > 0 ? 'rose' : 'emerald',
-          subtitle: stats.overdue > 0 ? 'Needs immediate attention' : 'All caught up on deadlines',
+          subtitle: stats.overdue > 0 ? 'Requires attention' : 'All caught up',
         },
       ]
     : [];
 
-  const todayRemainingCount = todayFocusTasks.length;
-  const todayProgress = stats?.today?.progress ?? stats?.completionPercentage ?? 0;
-
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Welcome & Quick Action Header */}
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Welcome & New Task Button */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -212,7 +238,7 @@ const DashboardPage = () => {
             </span>
           </div>
           <p className="text-nimbus-500 mt-1 text-sm">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })} · Here&apos;s your daily productivity summary.
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })} · Here&apos;s your daily task overview.
           </p>
         </div>
         <button
@@ -226,7 +252,7 @@ const DashboardPage = () => {
       </motion.div>
 
       {/* Top 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
           : statCards.map((card, index) => (
@@ -234,77 +260,81 @@ const DashboardPage = () => {
             ))}
       </div>
 
-      {/* 2-Column Section: Today's Focus & Productivity Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* 1. Today's Focus Card (7 cols) */}
+      {/* Main Section: Today's Tasks & Compact Calendar Card */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Today's Tasks (7 cols) */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
           className="lg:col-span-7 nimbus-card p-6 flex flex-col justify-between"
         >
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-nimbus-200 dark:border-nimbus-800">
+            <div className="flex items-center justify-between pb-4 border-b border-nimbus-100 dark:border-nimbus-800">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">
-                  <Target className="w-5 h-5" />
+                  <CheckSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-nimbus-900 dark:text-white">
-                    Today&apos;s Focus
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-nimbus-900 dark:text-white">
+                      {isToday
+                        ? "Today's Tasks"
+                        : `Tasks for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                    </h3>
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300">
+                      {displayedTasks.length}
+                    </span>
+                  </div>
                   <p className="text-xs text-nimbus-500">
-                    {todayRemainingCount > 0
-                      ? `${todayRemainingCount} task${todayRemainingCount > 1 ? 's' : ''} to complete today`
-                      : 'You are all done for today! 🎉'}
+                    {displayedTasks.length > 0
+                      ? `${displayedTasks.length} task${displayedTasks.length > 1 ? 's' : ''} to complete`
+                      : 'No tasks scheduled for this date.'}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-xl font-bold text-brand-600 dark:text-brand-400">
-                  {todayProgress}%
-                </span>
-                <p className="text-[10px] text-nimbus-400 uppercase tracking-wider font-semibold">
-                  Focus Progress
-                </p>
-              </div>
+
+              {!isToday && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(new Date())}
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 rounded-lg hover:bg-brand-100 transition-colors"
+                >
+                  <RotateCcw className="w-3 h-3" /> Back to Today
+                </button>
+              )}
             </div>
 
-            {/* Progress Bar */}
-            <div className="mt-4">
-              <div className="w-full h-2.5 bg-nimbus-100 dark:bg-nimbus-800 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${todayProgress}%` }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-brand-500 to-indigo-600 rounded-full"
-                />
-              </div>
-            </div>
-
-            {/* Today's Tasks List */}
-            <div className="mt-5 space-y-2.5">
+            {/* Tasks List */}
+            <div className="mt-4 space-y-2.5">
               {loading ? (
                 <div className="space-y-3 py-2">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="h-12 bg-nimbus-100 dark:bg-nimbus-800 rounded-lg animate-pulse" />
                   ))}
                 </div>
-              ) : todayFocusTasks.length === 0 ? (
-                <div className="text-center py-6 bg-nimbus-50/50 dark:bg-nimbus-800/30 rounded-xl p-4 border border-dashed border-nimbus-200 dark:border-nimbus-800">
+              ) : displayedTasks.length === 0 ? (
+                <div className="text-center py-10 bg-nimbus-50/40 dark:bg-nimbus-800/20 rounded-xl p-4 border border-dashed border-nimbus-200 dark:border-nimbus-800">
                   <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-1.5" />
                   <p className="text-sm font-semibold text-nimbus-800 dark:text-nimbus-200">
-                    Zero Pending Tasks for Today!
+                    {isToday ? 'All caught up for today! 🎉' : 'Zero tasks on this date'}
                   </p>
                   <p className="text-xs text-nimbus-500 mt-0.5">
-                    Create a new task or take a well-deserved breather.
+                    Click below to create a new task or pick another date from the calendar.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setCreateModalOpen(true)}
+                    className="nimbus-btn-secondary text-xs mt-3"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> New Task
+                  </button>
                 </div>
               ) : (
-                todayFocusTasks.map((task) => (
+                displayedTasks.map((task) => (
                   <div
                     key={task._id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-200/70 dark:border-nimbus-800 hover:bg-nimbus-100/70 dark:hover:bg-nimbus-800/70 transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-xl bg-nimbus-50/70 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800 hover:bg-nimbus-100/70 dark:hover:bg-nimbus-800/70 transition-colors group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <button
@@ -333,9 +363,9 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="pt-4 mt-2 flex items-center justify-between text-xs text-nimbus-500">
+          <div className="pt-4 mt-4 border-t border-nimbus-100 dark:border-nimbus-800 flex items-center justify-between text-xs text-nimbus-500">
             <span>
-              {stats?.completed || 0} completed · {stats?.pending || 0} pending
+              {stats?.completed || 0} completed · {stats?.pending || 0} pending in workspace
             </span>
             <Link
               to="/tasks"
@@ -346,101 +376,32 @@ const DashboardPage = () => {
           </div>
         </motion.div>
 
-        {/* 2. Productivity Analytics Card (5 cols) */}
+        {/* Compact Calendar Card (5 cols) */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="lg:col-span-5 nimbus-card p-6 flex flex-col justify-between"
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-5 h-full"
         >
-          <div>
-            <div className="flex items-center justify-between pb-4 border-b border-nimbus-200 dark:border-nimbus-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-nimbus-900 dark:text-white">
-                    Productivity Analytics
-                  </h3>
-                  <p className="text-xs text-nimbus-500">Weekly performance & velocity</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Metrics Breakdown Grid */}
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <div className="p-3.5 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-200/60 dark:border-nimbus-800">
-                <p className="text-xs text-nimbus-500 font-medium">Weekly Completed</p>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                    +{stats?.weeklyCompleted ?? stats?.completed ?? 0}
-                  </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                    this week
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-200/60 dark:border-nimbus-800">
-                <p className="text-xs text-nimbus-500 font-medium">Completion Rate</p>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="text-2xl font-bold text-brand-600 dark:text-brand-400">
-                    {stats?.completionPercentage ?? 0}%
-                  </span>
-                  <span className="text-[10px] text-nimbus-400 font-semibold">overall</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Overdue Health Status */}
-            <div className="mt-4 p-3.5 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-200/60 dark:border-nimbus-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {stats?.overdue > 0 ? (
-                    <AlertTriangle className="w-4 h-4 text-rose-500" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  )}
-                  <span className="text-xs font-semibold text-nimbus-800 dark:text-nimbus-200">
-                    Overdue Health
-                  </span>
-                </div>
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    stats?.overdue > 0
-                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'
-                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
-                  }`}
-                >
-                  {stats?.overdue > 0 ? `${stats.overdue} Overdue` : '0 Overdue (Great)'}
-                </span>
-              </div>
-              <p className="text-[11px] text-nimbus-500 mt-1.5">
-                {stats?.overdue > 0
-                  ? 'Resolve overdue tasks to maintain high team momentum.'
-                  : 'All scheduled tasks are on track with zero delays.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-nimbus-200 dark:border-nimbus-800 mt-4 flex items-center justify-between text-xs text-nimbus-500">
-            <span>Active status: 🟢 Healthy</span>
-            <Link to="/tasks" className="text-brand-600 dark:text-brand-400 hover:underline">
-              Analytics details &rarr;
-            </Link>
-          </div>
+          <CompactCalendar
+            tasks={allTasks}
+            selectedDate={selectedDate}
+            onSelectDate={(d) => setSelectedDate(d)}
+          />
         </motion.div>
       </div>
 
-      {/* 3. Upcoming Deadlines Section (Next 5 Tasks) */}
+      {/* Quick Notes Section */}
+      <QuickNotesCard />
+
+      {/* Upcoming Deadlines (Clean Full-Width Section) */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
+        transition={{ delay: 0.3 }}
         className="nimbus-card"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-nimbus-100 dark:border-nimbus-800">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
               <CalendarClock className="w-5 h-5" />
@@ -453,10 +414,10 @@ const DashboardPage = () => {
             </div>
           </div>
           <Link
-            to="/tasks"
+            to="/calendar"
             className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1"
           >
-            View Calendar / All <ArrowRight className="w-3.5 h-3.5" />
+            Calendar View <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -468,7 +429,7 @@ const DashboardPage = () => {
           </div>
         ) : upcomingTasks.length === 0 ? (
           <div className="p-8 text-center">
-            <Calendar className="w-8 h-8 text-nimbus-400 mx-auto mb-2" />
+            <CalendarIcon className="w-8 h-8 text-nimbus-400 mx-auto mb-2" />
             <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
               No Upcoming Deadlines
             </p>
@@ -477,97 +438,31 @@ const DashboardPage = () => {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-nimbus-100 dark:divide-nimbus-800">
-            {upcomingTasks.map((task) => {
-              const overdue = isOverdue(task.dueDate, task.status);
-              return (
-                <Link
-                  key={task._id}
-                  to={`/tasks/${task._id}`}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 hover:bg-nimbus-50/80 dark:hover:bg-nimbus-800/40 transition-colors gap-2 group"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      {task.title}
-                    </p>
-                    {task.description && (
-                      <p className="text-xs text-nimbus-500 truncate mt-0.5 max-w-lg">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap flex-shrink-0">
-                    <Badge variant={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
-                    <Badge variant={STATUS_COLORS[task.status]}>{task.status}</Badge>
-                    {getUrgencyBadge(task.dueDate, task.status)}
-                    <span className="text-xs font-medium text-nimbus-600 dark:text-nimbus-400 min-w-[85px] text-right">
-                      {formatDate(task.dueDate)}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </motion.div>
-
-      {/* 4. Recent Workspace Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45 }}
-        className="nimbus-card"
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800">
-          <div>
-            <h3 className="text-base font-semibold text-nimbus-900 dark:text-white">Recent Activity</h3>
-            <p className="text-xs text-nimbus-500">Recently created and updated tasks</p>
-          </div>
-          <Link
-            to="/tasks"
-            className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400"
-          >
-            View all tasks <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="p-6 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-10 bg-nimbus-100 dark:bg-nimbus-800 rounded-lg animate-pulse" />
-            ))}
-          </div>
-        ) : recentTasks.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-nimbus-500 text-sm">No tasks created yet.</p>
-            <button
-              type="button"
-              onClick={() => setCreateModalOpen(true)}
-              className="nimbus-btn-primary mt-3 inline-flex"
-            >
-              <Plus className="w-4 h-4" /> Create Task
-            </button>
-          </div>
-        ) : (
-          <div className="divide-y divide-nimbus-100 dark:divide-nimbus-800">
-            {recentTasks.map((task) => (
+          <div className="divide-y divide-nimbus-100 dark:divide-nimbus-800/80">
+            {upcomingTasks.map((task) => (
               <Link
                 key={task._id}
                 to={`/tasks/${task._id}`}
-                className="flex items-center justify-between px-6 py-3.5 hover:bg-nimbus-50/80 dark:hover:bg-nimbus-800/40 transition-colors group"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 hover:bg-nimbus-50/70 dark:hover:bg-nimbus-800/40 transition-colors gap-2 group"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     {task.title}
                   </p>
-                  <p className="text-xs text-nimbus-400 mt-0.5">
-                    {task.dueDate ? `Due ${formatDate(task.dueDate)}` : 'No due date'}
-                  </p>
+                  {task.description && (
+                    <p className="text-xs text-nimbus-500 truncate mt-0.5 max-w-xl">
+                      {task.description}
+                    </p>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 ml-4">
+
+                <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap flex-shrink-0">
                   <Badge variant={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
                   <Badge variant={STATUS_COLORS[task.status]}>{task.status}</Badge>
+                  {getUrgencyBadge(task.dueDate, task.status)}
+                  <span className="text-xs font-medium text-nimbus-600 dark:text-nimbus-400 min-w-[85px] text-right">
+                    {formatDate(task.dueDate)}
+                  </span>
                 </div>
               </Link>
             ))}

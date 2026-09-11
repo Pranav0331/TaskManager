@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   CheckSquare,
+  Calendar,
+  FileText,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -12,6 +14,8 @@ import { useState } from 'react';
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/calendar', label: 'Calendar', icon: Calendar },
+  { path: '/notes', label: 'Notes', icon: FileText },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -49,7 +53,7 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
                 ${isActive
-                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
+                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 font-semibold'
                   : 'text-nimbus-600 dark:text-nimbus-400 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 hover:text-nimbus-900 dark:hover:text-white'
                 }`}
             >
@@ -58,7 +62,7 @@ const Sidebar = () => {
               {isActive && !collapsed && (
                 <motion.div
                   layoutId="sidebar-indicator"
-                  className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-600"
+                  className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-600 dark:bg-brand-400"
                 />
               )}
             </Link>

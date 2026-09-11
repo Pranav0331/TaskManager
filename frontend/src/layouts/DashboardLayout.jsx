@@ -5,6 +5,8 @@ import TopBar from '../components/layout/TopBar';
 const routeMeta = {
   '/dashboard': { title: 'Dashboard', subtitle: 'Overview of your tasks and progress' },
   '/tasks': { title: 'Tasks', subtitle: 'Manage and organize your work' },
+  '/calendar': { title: 'Calendar', subtitle: 'Schedule and track upcoming milestones' },
+  '/notes': { title: 'Notes', subtitle: 'Personal thoughts, scratchpad and ideas' },
   '/settings': { title: 'Settings', subtitle: 'Account and preferences' },
 };
 

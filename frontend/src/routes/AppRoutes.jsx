@@ -8,6 +8,8 @@ import VerifyOtpPage from '../pages/VerifyOtpPage';
 import DashboardPage from '../pages/DashboardPage';
 import TasksPage from '../pages/TasksPage';
 import TaskDetailPage from '../pages/TaskDetailPage';
+import CalendarPage from '../pages/CalendarPage';
+import NotesPage from '../pages/NotesPage';
 import SettingsPage from '../pages/SettingsPage';
 
 const PublicRoute = ({ children }) => {
@@ -63,6 +65,8 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/tasks/:id" element={<TaskDetailPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/notes" element={<NotesPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>

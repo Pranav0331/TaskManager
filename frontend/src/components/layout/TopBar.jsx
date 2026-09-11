@@ -10,6 +10,8 @@ import {
   LogOut,
   LayoutDashboard,
   CheckSquare,
+  Calendar,
+  FileText,
   Settings,
   Search,
 } from 'lucide-react';
@@ -21,6 +23,8 @@ import NotificationPanel from './NotificationPanel';
 const mobileNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/calendar', label: 'Calendar', icon: Calendar },
+  { path: '/notes', label: 'Notes', icon: FileText },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
