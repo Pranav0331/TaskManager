@@ -59,41 +59,57 @@ const QuickNotesCard = () => {
   const [newContent, setNewContent] = useState('');
   const [newColor, setNewColor] = useState('indigo');
 
-  const loadNotes = () => {
-    setNotes(noteService.getRecentNotes(3));
+  const loadNotes = async () => {
+    try {
+      const allNotes = await noteService.getNotes();
+      const recent = (allNotes || [])
+        .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+        .slice(0, 3);
+      setNotes(recent);
+    } catch (e) {
+      setNotes(noteService.getRecentNotes(3));
+    }
   };
 
   useEffect(() => {
     loadNotes();
   }, []);
 
-  const handleCreateNote = (e) => {
+  const handleCreateNote = async (e) => {
     e.preventDefault();
     if (!newTitle.trim() && !newContent.trim()) {
       toast.error('Please enter a note title or content');
       return;
     }
 
-    noteService.createNote({
-      title: newTitle.trim() || 'Untitled Note',
-      content: newContent.trim(),
-      color: newColor,
-    });
+    try {
+      await noteService.createNote({
+        title: newTitle.trim() || 'Untitled Note',
+        content: newContent.trim(),
+        color: newColor,
+      });
 
-    toast.success('Note saved!');
-    setNewTitle('');
-    setNewContent('');
-    setNewColor('indigo');
-    setCreateModalOpen(false);
-    loadNotes();
+      toast.success('Note saved!');
+      setNewTitle('');
+      setNewContent('');
+      setNewColor('indigo');
+      setCreateModalOpen(false);
+      await loadNotes();
+    } catch (err) {
+      toast.error('Failed to create note');
+    }
   };
 
-  const handleDeleteNote = (id, e) => {
+  const handleDeleteNote = async (id, e) => {
     e.preventDefault();
     e.stopPropagation();
-    noteService.deleteNote(id);
-    toast.success('Note removed');
-    loadNotes();
+    try {
+      await noteService.deleteNote(id);
+      toast.success('Note removed');
+      await loadNotes();
+    } catch (err) {
+      toast.error('Failed to remove note');
+    }
   };
 
   const formatNoteDate = (dateStr) => {
