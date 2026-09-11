@@ -26,7 +26,7 @@ export const ThemeProvider = ({ children }) => {
     transitionTimerRef.current = setTimeout(() => {
       root.classList.remove('theme-transition');
       transitionTimerRef.current = null;
-    }, 400);
+    }, 500);
   }, []);
 
   useEffect(() => {
@@ -52,7 +52,51 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [darkMode, enableThemeTransition]);
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = useCallback((event) => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // View Transitions API circular ripple reveal animation
+    if (!prefersReducedMotion && typeof document !== 'undefined' && document.startViewTransition) {
+      let x = window.innerWidth - 48;
+      let y = 32;
+
+      if (event && event.clientX !== undefined && event.clientY !== undefined) {
+        x = event.clientX;
+        y = event.clientY;
+      } else if (event && event.currentTarget && event.currentTarget.getBoundingClientRect) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        x = rect.left + rect.width / 2;
+        y = rect.top + rect.height / 2;
+      }
+
+      const endRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      const transition = document.startViewTransition(() => {
+        setDarkMode((prev) => !prev);
+      });
+
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 450,
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            pseudoElement: '::view-transition-new(root)',
+          }
+        );
+      });
+      return;
+    }
+
+    // Standard state toggle for fallback or reduced motion
     setDarkMode((prev) => !prev);
   }, []);
 

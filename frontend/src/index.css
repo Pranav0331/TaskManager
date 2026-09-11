@@ -24,18 +24,33 @@
   }
 }
 
-/* Smooth premium theme transition */
+/* Smooth View Transitions API for expanding circular ripple */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 999999;
+}
+
+/* Smooth premium theme morph transitions */
 @media (prefers-reduced-motion: no-preference) {
   html.theme-transition,
   html.theme-transition *,
   html.theme-transition *::before,
   html.theme-transition *::after {
-    transition: background-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 350ms cubic-bezier(0.4, 0, 0.2, 1),
-                color 350ms cubic-bezier(0.4, 0, 0.2, 1),
-                fill 350ms cubic-bezier(0.4, 0, 0.2, 1),
-                stroke 350ms cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 350ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: background-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                fill 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 400ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 400ms cubic-bezier(0.4, 0, 0.2, 1) !important;
     transition-delay: 0s !important;
   }
 }

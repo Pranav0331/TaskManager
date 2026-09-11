@@ -84,10 +84,28 @@ const TopBar = ({ title, subtitle }) => {
             </div>
 
             <button
+              type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500"
+              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white transition-colors relative overflow-hidden"
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label="Toggle theme"
             >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={darkMode ? 'dark' : 'light'}
+                  initial={{ y: -8, opacity: 0, rotate: -60, scale: 0.7 }}
+                  animate={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ y: 8, opacity: 0, rotate: 60, scale: 0.7 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  className="flex items-center justify-center"
+                >
+                  {darkMode ? (
+                    <Sun className="w-5 h-5 text-amber-400 fill-amber-400/20" />
+                  ) : (
+                    <Moon className="w-5 h-5 text-nimbus-600 dark:text-nimbus-400" />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </button>
 
             <div className="relative">

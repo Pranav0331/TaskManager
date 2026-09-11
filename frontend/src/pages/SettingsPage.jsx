@@ -556,21 +556,38 @@ const SettingsPage = () => {
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {darkMode ? <Moon className="w-5 h-5 text-nimbus-400" /> : <Sun className="w-5 h-5 text-nimbus-400" />}
+              <div className="w-8 h-8 rounded-lg bg-nimbus-100 dark:bg-nimbus-800 flex items-center justify-center overflow-hidden">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={darkMode ? 'dark' : 'light'}
+                    initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                    exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {darkMode ? (
+                      <Moon className="w-4 h-4 text-amber-400" />
+                    ) : (
+                      <Sun className="w-4 h-4 text-amber-500" />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
               <div>
                 <p className="text-sm font-medium text-nimbus-900 dark:text-white">Dark Mode</p>
                 <p className="text-xs text-nimbus-500">Toggle between light and dark themes</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={toggleTheme}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
                 darkMode ? 'bg-brand-600' : 'bg-nimbus-300'
               }`}
             >
               <motion.div
                 layout
-                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm"
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm flex items-center justify-center text-xs"
                 animate={{ left: darkMode ? '26px' : '2px' }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
