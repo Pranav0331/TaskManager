@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getInitials } from '../../utils/constants';
 import NotificationPanel from './NotificationPanel';
+import GlobalSearchModal from './GlobalSearchModal';
 
 const mobileNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -35,6 +36,20 @@ const TopBar = ({ title, subtitle }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Global keyboard shortcut for Cmd+K (Mac) / Ctrl+K (Windows/Linux)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -61,9 +76,20 @@ const TopBar = ({ title, subtitle }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="hidden sm:flex p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              title="Search workspace (⌘K / Ctrl+K)"
+              aria-label="Search"
+              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
               <Search className="w-5 h-5" />
             </button>
+
+            <GlobalSearchModal
+              isOpen={searchOpen}
+              onClose={() => setSearchOpen(false)}
+            />
 
             {/* Notification Bell Dropdown */}
             <div className="relative">
