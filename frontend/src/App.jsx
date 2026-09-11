@@ -9,7 +9,12 @@ function App() {
       <AuthProvider>
         <AppRoutes />
         <Toaster
-          position="top-right"
+          position="bottom-right"
+          containerStyle={{
+            bottom: 24,
+            right: 24,
+            zIndex: 9999,
+          }}
           toastOptions={{
             duration: 3000,
             style: {
@@ -18,12 +23,14 @@ function App() {
               borderRadius: '10px',
               fontSize: '14px',
               padding: '12px 16px',
-              boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
             },
             success: {
+              duration: 3000,
               iconTheme: { primary: '#10b981', secondary: '#fff' },
             },
             error: {
+              duration: 3500,
               iconTheme: { primary: '#ef4444', secondary: '#fff' },
             },
           }}
