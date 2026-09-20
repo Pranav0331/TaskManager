@@ -277,7 +277,3 @@ All protected endpoints require the header: `Authorization: Bearer <token>`.
 *For complete payload and response schemas, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md).*
 
 ---
-
-## License
-
-This project is licensed under the [MIT License](./LICENSE).

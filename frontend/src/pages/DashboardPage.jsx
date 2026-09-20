@@ -9,7 +9,6 @@ import {
   Plus,
   Calendar as CalendarIcon,
   AlertTriangle,
-  Sparkles,
   CheckCircle2,
   CalendarClock,
   RotateCcw,
@@ -229,14 +228,9 @@ const DashboardPage = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold text-nimbus-900 dark:text-white">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
-            </h2>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
-              <Sparkles className="w-3 h-3" /> Dashboard
-            </span>
-          </div>
+          <h2 className="text-2xl font-bold text-nimbus-900 dark:text-white">
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
+          </h2>
           <p className="text-nimbus-500 mt-1 text-sm">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })} · Here&apos;s your daily task overview.
           </p>
