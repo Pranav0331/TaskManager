@@ -16,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import { noteService } from '../services/noteService';
 import Modal from '../components/ui/Modal';
+import { NoteCardSkeleton } from '../components/ui/Skeleton';
 
 const COLOR_OPTIONS = [
   {
@@ -62,6 +63,7 @@ const COLOR_OPTIONS = [
 
 const NotesPage = () => {
   const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedColor, setSelectedColor] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -73,17 +75,22 @@ const NotesPage = () => {
   const [saving, setSaving] = useState(false);
   const searchInputRef = useRef(null);
 
-  const loadNotes = useCallback(async () => {
+  const loadNotes = useCallback(async (isInitial = false) => {
+    if (isInitial) {
+      setLoading(true);
+    }
     try {
       const data = await noteService.getNotes();
       setNotes(data || []);
     } catch (err) {
       console.error('Failed to load notes', err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadNotes();
+    loadNotes(true);
   }, [loadNotes]);
 
   // Keyboard shortcut listener for ⌘K / Ctrl+K
@@ -317,7 +324,7 @@ const NotesPage = () => {
               Notes & Scratchpad
             </h2>
             <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
-              {notes.length} note{notes.length !== 1 ? 's' : ''}
+              {loading ? 'Loading...' : `${notes.length} note${notes.length !== 1 ? 's' : ''}`}
             </span>
           </div>
           <p className="text-nimbus-500 mt-1 text-sm">
@@ -398,7 +405,14 @@ const NotesPage = () => {
       </div>
 
       {/* Main Content Area */}
-      {filteredNotes.length === 0 ? (
+      {loading ? (
+        /* Loading Skeleton State matching the 3-column note card layout */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <NoteCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : filteredNotes.length === 0 ? (
         /* Empty State */
         <motion.div
           initial={{ opacity: 0, y: 10 }}
