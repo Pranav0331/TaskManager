@@ -1,6 +1,6 @@
 # TaskFlow
 
-> A modern full-stack task management and productivity platform designed for seamless personal workflow, scheduling, and note-taking.
+> A modern full-stack task management, productivity, and note-taking platform designed for seamless workflow organization, scheduling, and real-time collaboration.
 
 ![React](https://img.shields.io/badge/React-18-blue?logo=react) ![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js) ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen?logo=mongodb) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?logo=tailwind-css) ![Vite](https://img.shields.io/badge/Vite-Bundler-purple?logo=vite) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
@@ -8,54 +8,60 @@
 
 ## Overview
 
-**TaskFlow** is an all-in-one productivity SaaS application that unifies task management, dashboard analytics, interactive calendar scheduling, and scratchpad notes into a unified, responsive interface. Inspired by modern tools like Linear, Notion, and Vercel Dashboard, TaskFlow delivers an intuitive experience with sleek animations, comprehensive search, and robust security.
+**TaskFlow** is an all-in-one productivity SaaS web application that unifies task tracking, dashboard analytics, interactive calendar scheduling, and scratchpad notes into a single responsive, high-performance interface. Inspired by tools like Linear, Notion, and Vercel Dashboard, TaskFlow delivers an intuitive experience with sleek micro-animations, skeleton loading states, global search, and enterprise-grade security.
 
 ---
 
-## Features
+## Key Features
 
 ### 🔐 Authentication & Security
-- **Secure Registration & Login**: User onboarding with email verification via OTP (One-Time Password).
-- **JWT-Based Authentication**: Secure token-based session handling with automatic token validation and auth header injection.
-- **Password Reset Flow**: End-to-end "Forgot Password" workflow generating single-use, time-limited, SHA-256 hashed reset tokens delivered via transactional email with anti-enumeration protection.
+- **Secure Registration & Login**: User onboarding with email verification via a 4-digit OTP (One-Time Password).
+- **JWT-Based Authentication**: Secure token-based session handling with automatic validation and auth header injection.
+- **Password Reset Flow**: End-to-end "Forgot Password" workflow generating single-use, time-limited, SHA-256 hashed reset tokens delivered via Brevo transactional email with anti-enumeration protection.
 - **Protected Routes**: Client-side navigation guards and server-side middleware preventing unauthorized access.
-- **Logout Behavior**: Complete session teardown redirecting users directly to the public Landing Page (`/`).
+- **Clean Logout**: Complete session teardown redirecting users directly to the public Landing Page (`/`).
 
 ### 📊 Dashboard & Analytics
-- **Summary Metrics**: High-level statistical cards tracking **Total Tasks**, **Completed Tasks**, **Pending Tasks**, and **Overdue Tasks** with completion rate percentages.
-- **Today's Tasks**: Dedicated overview of urgent tasks due on the current day.
+- **Summary Metrics**: High-level statistical cards tracking **Total Tasks**, **Completed Tasks**, **Pending Tasks**, and **Overdue Tasks** with completion percentage progress bars.
+- **Today's Agenda**: Dedicated overview of urgent tasks due on the current day with inline status toggling.
 - **Interactive Mini Calendar**: Quick date selector and visual task load overview right from the dashboard.
 - **Quick Notes Preview**: Access and review pinned and recent notes directly without leaving the dashboard.
-- **Quick Actions**: One-click modal triggers to create new tasks and notes instantly.
+- **Quick Action Triggers**: One-click modal triggers to create new tasks and notes instantly.
 
 ### ✅ Task Management
 - **Full CRUD Operations**: Create, view, update, and delete tasks with detailed titles, descriptions, due dates, priority levels, and statuses.
-- **Status & Priority Tracking**: Categorize by status (*Pending*, *In Progress*, *Completed*) and priority (*Low*, *Medium*, *High*).
-- **Overdue Indicators**: Visual alerts identifying overdue tasks in real time.
-- **Search & Filtering**: Real-time keyword filtering, status tabs, and priority sorting.
+- **Status & Priority Tracking**: Categorize tasks by status (*Pending*, *In Progress*, *Completed*) and priority (*Low*, *Medium*, *High*).
+- **Overdue Indicators**: Real-time visual alerts and badges identifying overdue tasks.
+- **Debounced Search & Sorting**: Real-time keyword filtering, status tabs, and multi-field sorting (`dueDate`, `createdAt`, `title`, `priority`, `status`).
 
 ### 📅 Calendar Planning
 - **Full Month Grid**: Interactive monthly calendar with seamless month/year navigation.
-- **Today Selection**: Quick jump to today's date.
+- **Today Quick-Jump**: One-click jump to the current date.
 - **Task Day Indicators**: Visual badges and dots indicating scheduled tasks on specific days.
 - **Day Inspector**: Click any calendar day to inspect scheduled tasks or create a task with that date prefilled.
 
 ### 📝 Notes & Scratchpad
-- **Rich Note Management**: Create, edit, and organize unstructured ideas and quick reminders.
-- **Color Accents**: Assign customizable color tags (Slate, Blue, Green, Amber, Purple, Rose) for easy visual scanning.
-- **Pin to Top**: Keep critical thoughts and top priorities pinned at the top of the notes list.
-- **Search & Filter**: Instant search across titles and content, with color tag filters.
-- **Safe Modal Editing**: Non-destructive editing modal with explicit save/close actions to prevent accidental loss of work.
+- **Rich Note Management**: Create, edit, and organize unstructured thoughts, checklists, and meeting snippets.
+- **Color Accent Tagging**: 5 distinct color accents (*Indigo*, *Amber*, *Emerald*, *Rose*, *Sky*) for visual categorizing.
+- **Pin to Top**: Keep critical thoughts pinned at the top of the notes grid.
+- **Flicker-Free Skeleton Loading**: Instant skeleton cards matching the note-card layout during data fetching with zero empty-state flicker.
+- **Dual Search**: In-page search with keyboard shortcut (`⌘K` / `Ctrl+K`) and color filter pills.
+- **Safe Modal Editing**: Non-destructive editing modal with explicit save/close actions.
 
-### 🎨 Design & Experience
-- **Light & Dark Themes**: Comprehensive theme support with a smooth, polished 400ms theme morphing transition.
-- **Global Search (`Cmd+K` / `Ctrl+K`)**: Unified modal search across Tasks, Notes, and Calendar events from any page.
-- **Bottom-Right Toast Notifications**: Non-intrusive feedback toasts for login, task updates, note saving, and password resets.
-- **Responsive Layout**: Mobile-first design with a collapsible sidebar, clean navigation, and accessible mobile controls.
+### 🔔 Notifications & Web Push
+- **In-App Notification Center**: Notification dropdown panel with unread badge counters.
+- **Web Push Notifications**: Browser push notifications via VAPID keys and Service Worker for task deadlines and reminders.
+- **Automated Deadline Checks**: Scheduled cron jobs checking for upcoming and overdue tasks.
+
+### 🎨 Design & User Experience
+- **Light & Dark Themes**: Comprehensive theme support with smooth, polished 400ms theme transitions.
+- **Global Search Modal (`⌘K` / `Ctrl+K`)**: Unified modal search across Tasks, Notes, and Calendar events from any page.
+- **Bottom-Right Toast Notifications**: Non-intrusive feedback toasts for operations.
+- **Responsive Layout**: Mobile-first design with a collapsible sidebar and accessible mobile controls.
 
 ---
 
-## Main Pages
+## Main Pages & Routes
 
 | Route | Page | Description | Access |
 |---|---|---|---|
@@ -69,60 +75,8 @@
 | `/tasks` | **Tasks** | Comprehensive task list, filtering, search, and status controls | Protected |
 | `/tasks/:id` | **Task Details** | Dedicated view for single task inspection and editing | Protected |
 | `/calendar` | **Calendar** | Monthly calendar view with scheduled task markers | Protected |
-| `/notes` | **Notes** | Color-coded scratchpad with search, pinning, and quick editing | Protected |
-| `/settings` | **Settings** | User profile info, notification preferences, and account controls | Protected |
-
----
-
-## Dashboard Overview
-
-The TaskFlow dashboard provides a centralized workspace command center:
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│  Stats: [ Total Tasks ] [ Completed ] [ Pending ] [ Overdue Tasks ]   │
-├───────────────────────────────────┬────────────────────────────────────┤
-│  Today's Tasks                    │  Mini Calendar                     │
-│  - Task items with status toggles │  - Month view with date selection  │
-│  - Due date & priority tags       │                                    │
-├───────────────────────────────────┼────────────────────────────────────┤
-│  Quick Notes                      │  Recent Activity & Actions         │
-│  - Pinned and recent notes        │  - "+ New Task" / "+ New Note"     │
-│  - Color accents & quick edit     │  - Real-time progress percentage   │
-└───────────────────────────────────┴────────────────────────────────────┘
-```
-
----
-
-## Notes & Scratchpad
-
-The Notes module functions as a lightweight, flexible scratchpad:
-- **Instant Creation**: Capture quick thoughts, checklists, or snippets.
-- **Color Tagging**: Organize notes with distinct palette accents.
-- **Pinning**: Toggle pin status to keep important notes at the top.
-- **Smart Search**: Search across both note titles and body content.
-- **Reliable Modal**: Modal remains open while editing until explicitly saved or cancelled.
-
----
-
-## Authentication & Security
-
-- **Password Hashing**: Passwords hashed using `bcryptjs` with salt rounds set to 12 before database persistence.
-- **Stateless Tokens**: Signed JSON Web Tokens (JWT) with configurable expiration (`JWT_EXPIRE`).
-- **Reset Token Security**: Reset tokens generated using `crypto.randomBytes(32)` and stored in MongoDB strictly as SHA-256 hashes (`select: false`).
-- **Anti-Enumeration**: Password reset requests return a consistent success message regardless of whether the email is registered.
-- **Token Invalidation**: Reset tokens are strictly single-use and cleared immediately upon successful password reset.
-
----
-
-## UI / UX Architecture
-
-TaskFlow is built on the **Nimbus UI** design system:
-- **Color System**: Slate neutrals paired with indigo brand accents (`#4f46e5`).
-- **Typography**: Clean hierarchy powered by the Inter font family.
-- **Micro-Animations**: Subtle page transitions and modal popups using Framer Motion.
-- **Theme Transitions**: Smooth CSS variables transition for background, borders, text, and cards without layout flickering.
-- **Toast Notifications**: Positioned fixed in the bottom-right corner to never obstruct header controls.
+| `/notes` | **Notes** | Color-coded scratchpad with search, pinning, skeleton loader, and modal editor | Protected |
+| `/settings` | **Settings** | User profile info, push notification preferences, and account controls | Protected |
 
 ---
 
@@ -143,16 +97,12 @@ TaskFlow is built on the **Nimbus UI** design system:
 - **Framework**: [Express.js](https://expressjs.com/)
 - **Validation**: [express-validator](https://express-validator.github.io/)
 - **Security**: [bcryptjs](https://github.com/dcodeIO/bcrypt.js), [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken), [cors](https://github.com/expressjs/cors)
-- **Email Service**: [Brevo Transactional API](https://www.brevo.com/) with dev fallback
+- **Push Notifications**: [web-push](https://github.com/web-push-libs/web-push), [node-cron](https://github.com/node-cron/node-cron)
+- **Email Service**: [Brevo Transactional API](https://www.brevo.com/) with development fallback
 
 ### Database
 - **Database**: [MongoDB Atlas](https://www.mongodb.com/atlas) (or in-memory MongoDB for offline development)
 - **ODM**: [Mongoose](https://mongoosejs.com/)
-
-### Deployment & Tooling
-- **Frontend Hosting**: Vercel
-- **Backend Hosting**: Render / Vercel
-- **Version Control**: Git & GitHub
 
 ---
 
@@ -173,15 +123,15 @@ TaskManager/
 │   └── server.js             # Express server entry point
 │
 ├── frontend/
-│   ├── public/               # Static assets & icons
+│   ├── public/               # Static assets, icons, and service worker
 │   ├── src/
-│   │   ├── components/       # Reusable components (TaskCard, NoteCard, Modal, Button, etc.)
+│   │   ├── components/       # Reusable components (TaskCard, NoteCard, Modal, Skeleton, etc.)
 │   │   ├── context/          # AuthContext & ThemeContext providers
-│   │   ├── hooks/            # Custom hooks (useTasks, useTheme, etc.)
+│   │   ├── hooks/            # Custom hooks (useDebounce, useWebPush, etc.)
 │   │   ├── layouts/          # DashboardLayout with Header & Sidebar
 │   │   ├── pages/            # View components (LandingPage, Dashboard, Tasks, Calendar, Notes, Settings, Auth)
 │   │   ├── routes/           # AppRoutes, ProtectedRoute & PublicRoute configuration
-│   │   ├── services/         # Axios API instance and taskService / authService methods
+│   │   ├── services/         # Axios API instances (authService, taskService, noteService)
 │   │   ├── utils/            # Helper functions & formatting utilities
 │   │   ├── App.jsx           # Root application component
 │   │   ├── index.css         # Global Tailwind styles & theme variables
@@ -275,7 +225,7 @@ VITE_API_URL=http://localhost:5001/api
 
 ---
 
-## API Overview
+## API Reference
 
 All protected endpoints require the header: `Authorization: Bearer <token>`.
 
@@ -311,23 +261,20 @@ All protected endpoints require the header: `Authorization: Bearer <token>`.
 | `PATCH` | `/api/notes/:id/pin` | Toggle pinned state of note | Protected |
 | `DELETE` | `/api/notes/:id` | Delete a note | Protected |
 
+### Notification & Push Endpoints (`/api/notifications`)
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `GET` | `/api/notifications/vapid-public-key` | Get VAPID public key for push subscriptions | Public |
+| `POST` | `/api/notifications/subscribe` | Register a new web push subscription device | Protected |
+| `POST` | `/api/notifications/unsubscribe` | Remove a web push subscription | Protected |
+| `POST` | `/api/notifications/test` | Send a test push notification to user | Protected |
+| `GET` | `/api/notifications/preferences` | Get user notification preferences | Protected |
+| `PUT` | `/api/notifications/preferences` | Update user notification preferences | Protected |
+| `GET` | `/api/notifications/devices` | List registered push notification devices | Protected |
+| `DELETE` | `/api/notifications/devices/:id` | Remove a registered push device | Protected |
+| `POST` | `/api/notifications/check-deadlines` | Trigger deadline reminder check | Protected |
+
 *For complete payload and response schemas, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md).*
-
----
-
-## Future Improvements
-
-- [ ] Drag-and-drop Kanban board view for tasks.
-- [ ] Task file attachments and rich text formatting.
-- [ ] Recurring tasks (daily, weekly, monthly schedules).
-- [ ] Team workspaces and task assignment sharing.
-- [ ] Activity logs and task history tracking.
-
----
-
-## Author
-
-**TaskFlow** — Built as a full-stack development project.
 
 ---
 

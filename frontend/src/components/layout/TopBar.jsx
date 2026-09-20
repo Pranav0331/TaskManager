@@ -158,9 +158,17 @@ const TopBar = ({ title, subtitle }) => {
                         <p className="text-sm font-medium text-nimbus-900 dark:text-white">{user?.name}</p>
                         <p className="text-xs text-nimbus-500 truncate">{user?.email}</p>
                       </div>
+                      <Link
+                        to="/settings"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-nimbus-700 dark:text-nimbus-300 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Settings
+                      </Link>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" />
                         Sign out
