@@ -80,12 +80,26 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
     e.preventDefault();
     const validSubtasks = form.subtasks
       .filter((s) => s.title && s.title.trim())
-      .map((s) => ({
-        ...s,
-        title: s.title.trim(),
-        description: s.description ? s.description.trim() : '',
-        dueDate: s.dueDate || null,
-      }));
+      .map((s) => {
+        const subtaskPayload = {
+          title: s.title.trim(),
+          description: s.description ? s.description.trim() : '',
+          status: s.status || 'Pending',
+          priority: s.priority || 'Medium',
+          dueDate: s.dueDate || null,
+        };
+
+        const existingId = s._id || s.id;
+        if (
+          existingId &&
+          !String(existingId).startsWith('temp-') &&
+          /^[0-9a-fA-F]{24}$/.test(String(existingId))
+        ) {
+          subtaskPayload._id = existingId;
+        }
+
+        return subtaskPayload;
+      });
 
     onSubmit({
       ...form,

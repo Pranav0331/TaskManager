@@ -1,5 +1,34 @@
+import mongoose from 'mongoose';
 import Task from '../models/Task.js';
 import { sendTaskNotification } from '../services/notificationService.js';
+
+/**
+ * Helper to sanitize subtask inputs for MongoDB
+ * Strips temporary client IDs and preserves valid ObjectIds
+ */
+const sanitizeSubtasks = (subtasks) => {
+  if (!Array.isArray(subtasks)) return [];
+  return subtasks
+    .map((s) => {
+      const item = {
+        title: (s.title || '').trim(),
+        description: (s.description || '').trim(),
+        status: s.status || 'Pending',
+        priority: s.priority || 'Medium',
+        dueDate: s.dueDate || null,
+      };
+      const rawId = s._id || s.id;
+      if (
+        rawId &&
+        !String(rawId).startsWith('temp-') &&
+        mongoose.Types.ObjectId.isValid(rawId)
+      ) {
+        item._id = rawId;
+      }
+      return item;
+    })
+    .filter((s) => s.title);
+};
 
 /**
  * @desc    Get all tasks for logged in user with search, filter, sort
@@ -28,12 +57,82 @@ export const getTasks = async (req, res) => {
       ];
     }
 
-    const sortOptions = {};
-    const validSortFields = ['dueDate', 'createdAt', 'title', 'priority', 'status'];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : 'dueDate';
-    sortOptions[sortField] = order === 'desc' ? -1 : 1;
+    const tasks = await Task.find(filter);
 
-    const tasks = await Task.find(filter).sort(sortOptions);
+    // Status order: In Progress (1) -> Pending / Todo (2) -> Completed (3)
+    const STATUS_WEIGHT = {
+      'In Progress': 1,
+      'Pending': 2,
+      'Todo': 2,
+      'Completed': 3,
+    };
+
+    const PRIORITY_WEIGHT = {
+      'High': 3,
+      'Medium': 2,
+      'Low': 1,
+    };
+
+    const isDesc = order === 'desc';
+
+    tasks.sort((a, b) => {
+      // 1. Primary sort: Status Grouping (In Progress -> Pending -> Completed)
+      const weightA = STATUS_WEIGHT[a.status] || 2;
+      const weightB = STATUS_WEIGHT[b.status] || 2;
+
+      if (sortBy === 'status') {
+        if (weightA !== weightB) {
+          return isDesc ? weightB - weightA : weightA - weightB;
+        }
+      } else {
+        if (weightA !== weightB) {
+          return weightA - weightB;
+        }
+      }
+
+      // 2. Secondary sort within each status group
+      if (sortBy === 'dueDate' || sortBy === 'status') {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1; // Put tasks without due date at the end
+        if (!b.dueDate) return -1;
+        const diff = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        return isDesc && sortBy === 'dueDate' ? -diff : diff;
+      }
+
+      if (sortBy === 'priority') {
+        const pA = PRIORITY_WEIGHT[a.priority] || 2;
+        const pB = PRIORITY_WEIGHT[b.priority] || 2;
+        const diff = isDesc ? (pA - pB) : (pB - pA);
+        if (diff !== 0) return diff;
+      }
+
+      if (sortBy === 'title') {
+        const titleA = (a.title || '').toLowerCase();
+        const titleB = (b.title || '').toLowerCase();
+        const comp = titleA.localeCompare(titleB);
+        if (comp !== 0) return isDesc ? -comp : comp;
+      }
+
+      if (sortBy === 'createdAt') {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        const diff = timeA - timeB;
+        if (diff !== 0) return isDesc ? -diff : diff;
+      }
+
+      // Tie-breaker within status group: earliest due date first
+      if (a.dueDate && b.dueDate) {
+        const dueDiff = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        if (dueDiff !== 0) return dueDiff;
+      } else if (a.dueDate && !b.dueDate) {
+        return -1;
+      } else if (!a.dueDate && b.dueDate) {
+        return 1;
+      }
+
+      // Final tie-breaker: newest createdAt
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
 
     res.json({
       success: true,
@@ -155,15 +254,7 @@ export const createTask = async (req, res) => {
   try {
     const { title, description, status, priority, dueDate, assignedTo, subtasks } = req.body;
 
-    const parsedSubtasks = Array.isArray(subtasks)
-      ? subtasks.map((s) => ({
-          title: (s.title || '').trim(),
-          description: (s.description || '').trim(),
-          status: s.status || 'Pending',
-          priority: s.priority || 'Medium',
-          dueDate: s.dueDate || null,
-        })).filter((s) => s.title)
-      : [];
+    const parsedSubtasks = sanitizeSubtasks(subtasks);
 
     let initialStatus = status || 'Pending';
     if (parsedSubtasks.length > 0 && parsedSubtasks.every((s) => s.status === 'Completed')) {
@@ -249,14 +340,7 @@ export const updateTask = async (req, res) => {
     };
 
     if (Array.isArray(subtasks)) {
-      updateData.subtasks = subtasks.map((s) => ({
-        _id: s._id || s.id,
-        title: (s.title || '').trim(),
-        description: (s.description || '').trim(),
-        status: s.status || 'Pending',
-        priority: s.priority || 'Medium',
-        dueDate: s.dueDate || null,
-      })).filter((s) => s.title);
+      updateData.subtasks = sanitizeSubtasks(subtasks);
 
       if (updateData.subtasks.length > 0) {
         const allCompleted = updateData.subtasks.every((s) => s.status === 'Completed');
@@ -437,6 +521,10 @@ export const addSubtask = async (req, res) => {
  */
 export const updateSubtask = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.subtaskId)) {
+      return res.status(404).json({ success: false, message: 'Subtask not found' });
+    }
+
     const task = await Task.findOne({
       _id: req.params.id,
       $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
@@ -508,6 +596,10 @@ export const updateSubtask = async (req, res) => {
  */
 export const toggleSubtask = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.subtaskId)) {
+      return res.status(404).json({ success: false, message: 'Subtask not found' });
+    }
+
     const task = await Task.findOne({
       _id: req.params.id,
       $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
@@ -570,6 +662,10 @@ export const toggleSubtask = async (req, res) => {
  */
 export const deleteSubtask = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.subtaskId)) {
+      return res.status(404).json({ success: false, message: 'Subtask not found' });
+    }
+
     const task = await Task.findOne({
       _id: req.params.id,
       $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],

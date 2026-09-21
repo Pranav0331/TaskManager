@@ -38,7 +38,7 @@ router.post(
       .optional()
       .isIn(['Low', 'Medium', 'High'])
       .withMessage('Invalid priority'),
-    body('dueDate').optional().isISO8601().withMessage('Invalid due date'),
+    body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid due date'),
   ],
   validate,
   createTask
@@ -57,7 +57,7 @@ router.put(
       .optional()
       .isIn(['Low', 'Medium', 'High'])
       .withMessage('Invalid priority'),
-    body('dueDate').optional().isISO8601().withMessage('Invalid due date'),
+    body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid due date'),
   ],
   validate,
   updateTask
@@ -79,7 +79,7 @@ router.post(
       .optional()
       .isIn(['Low', 'Medium', 'High'])
       .withMessage('Invalid priority'),
-    body('dueDate').optional().isISO8601().withMessage('Invalid due date'),
+    body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid due date'),
   ],
   validate,
   addSubtask
@@ -98,7 +98,7 @@ router.put(
       .optional()
       .isIn(['Low', 'Medium', 'High'])
       .withMessage('Invalid priority'),
-    body('dueDate').optional().isISO8601().withMessage('Invalid due date'),
+    body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid due date'),
   ],
   validate,
   updateSubtask
