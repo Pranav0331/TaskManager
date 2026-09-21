@@ -192,7 +192,6 @@ const VerifyOtpPage = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">TaskFlow</h1>
-                <p className="text-brand-200 text-sm">Powered by Nimbus UI</p>
               </div>
             </div>
 

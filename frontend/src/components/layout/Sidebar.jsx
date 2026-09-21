@@ -37,7 +37,6 @@ const Sidebar = () => {
         {!collapsed && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <span className="font-semibold text-nimbus-900 dark:text-white">TaskFlow</span>
-            <p className="text-[10px] text-nimbus-400 uppercase tracking-wider">Nimbus UI</p>
           </motion.div>
         )}
       </div>

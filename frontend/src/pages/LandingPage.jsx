@@ -84,9 +84,6 @@ const LandingPage = () => {
               <span className="text-lg font-bold text-nimbus-900 dark:text-white tracking-tight">
                 TaskFlow
               </span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/70 border border-brand-200 dark:border-brand-800/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Nimbus
-              </span>
             </div>
           </Link>
 
@@ -586,7 +583,6 @@ const LandingPage = () => {
               <CheckSquare className="w-3.5 h-3.5" />
             </div>
             <span className="font-semibold text-nimbus-800 dark:text-nimbus-200">TaskFlow</span>
-            <span>· Nimbus Design System</span>
           </div>
 
           <div className="flex items-center gap-6">

@@ -47,7 +47,6 @@ const LoginPage = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">TaskFlow</h1>
-                <p className="text-brand-200 text-sm">Powered by Nimbus UI</p>
               </div>
             </div>
             <h2 className="text-4xl font-bold text-white leading-tight mb-4">
