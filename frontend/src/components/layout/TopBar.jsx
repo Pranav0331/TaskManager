@@ -34,7 +34,7 @@ const mobileNavItems = [
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
-const TopBar = ({ title, subtitle }) => {
+const TopBar = () => {
   const { user, logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -104,17 +104,13 @@ const TopBar = ({ title, subtitle }) => {
         <div className="flex items-center justify-between h-16 px-4 lg:px-8">
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800"
+              className="lg:hidden p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-400"
+              aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-lg font-semibold text-nimbus-900 dark:text-white">{title}</h1>
-              {subtitle && (
-                <p className="text-xs text-nimbus-500 dark:text-nimbus-400">{subtitle}</p>
-              )}
-            </div>
           </div>
 
           <div className="flex items-center gap-2">
