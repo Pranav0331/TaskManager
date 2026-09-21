@@ -53,7 +53,7 @@ const COLOR_MAP = {
 };
 
 const QuickNotesCard = () => {
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState(() => noteService.getRecentNotes(3));
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');

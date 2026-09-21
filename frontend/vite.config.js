@@ -7,6 +7,15 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
   },
   server: {
     port: 5173,
@@ -18,4 +27,3 @@ export default defineConfig({
     },
   },
 });
-
