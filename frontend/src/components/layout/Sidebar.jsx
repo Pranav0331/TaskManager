@@ -28,7 +28,7 @@ const Sidebar = () => {
       initial={false}
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.2 }}
-      className="hidden lg:flex flex-col h-screen bg-white dark:bg-nimbus-900 border-r border-nimbus-200 dark:border-nimbus-800 fixed left-0 top-0 z-30"
+      className="hidden lg:flex flex-col h-screen bg-white dark:bg-nimbus-900 fixed left-0 top-0 z-30"
     >
       <div className="flex items-center gap-3 px-5 h-16 border-b border-nimbus-200 dark:border-nimbus-800">
         <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
