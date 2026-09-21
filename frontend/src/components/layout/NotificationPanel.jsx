@@ -4,104 +4,36 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Sparkles,
   Settings,
   X,
   ExternalLink,
-  CheckCheck,
 } from 'lucide-react';
 import { taskService } from '../../services/taskService';
-import { formatDateTime, formatDate, isOverdue } from '../../utils/constants';
+import { formatDateTime } from '../../utils/constants';
+import {
+  generateNotificationsFromTasks,
+  markNotificationsAsRead,
+} from '../../utils/notifications';
 
-const NotificationPanel = ({ isOpen, onClose }) => {
+const NotificationPanel = ({ isOpen, onClose, onMarkAllRead }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const generateRecentNotifications = async () => {
+    const loadNotifications = async () => {
       setLoading(true);
       try {
         const response = await taskService.getTasks({ sortBy: 'updatedAt', order: 'desc' });
-        const tasks = response.data || [];
-        const items = [];
+        const items = generateNotificationsFromTasks(response.data || []);
+        setNotifications(items);
 
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-        tasks.forEach((task) => {
-          // 1. Overdue alerts
-          if (isOverdue(task.dueDate, task.status)) {
-            items.push({
-              id: `overdue-${task._id}`,
-              taskId: task._id,
-              type: 'overdue',
-              title: `⚠️ Overdue: ${task.title}`,
-              message: `Past deadline (${formatDate(task.dueDate)}). Action required.`,
-              time: task.updatedAt || task.createdAt,
-              icon: AlertTriangle,
-              color: 'rose',
-              priority: 1,
-            });
-          }
-
-          // 2. Due today
-          if (task.dueDate && task.status !== 'Completed') {
-            const due = new Date(task.dueDate);
-            if (due >= startOfToday && due <= endOfToday) {
-              items.push({
-                id: `due-${task._id}`,
-                taskId: task._id,
-                type: 'due_date',
-                title: `⏰ Due Today: ${task.title}`,
-                message: `Scheduled for completion today.`,
-                time: task.updatedAt || task.createdAt,
-                icon: Clock,
-                color: 'amber',
-                priority: 2,
-              });
-            }
-          }
-
-          // 3. Completed recently
-          if (task.status === 'Completed') {
-            items.push({
-              id: `completed-${task._id}`,
-              taskId: task._id,
-              type: 'completed',
-              title: `✅ Completed: ${task.title}`,
-              message: `Marked as completed.`,
-              time: task.updatedAt || task.createdAt,
-              icon: CheckCheck,
-              color: 'emerald',
-              priority: 3,
-            });
-          } else {
-            // 4. In progress / created
-            items.push({
-              id: `task-${task._id}`,
-              taskId: task._id,
-              type: 'created',
-              title: `✨ Task: ${task.title}`,
-              message: `Priority: ${task.priority} · Status: ${task.status}`,
-              time: task.createdAt,
-              icon: Sparkles,
-              color: 'brand',
-              priority: 4,
-            });
-          }
-        });
-
-        // Deduplicate and sort by priority then timestamp
-        const sorted = items
-          .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-          .slice(0, 8);
-
-        setNotifications(sorted);
+        // Immediately mark visible notifications as read
+        if (items.length > 0) {
+          markNotificationsAsRead(items.map((n) => n.id));
+        }
+        onMarkAllRead?.();
       } catch (err) {
         console.error('Failed to load notifications:', err);
       } finally {
@@ -109,8 +41,8 @@ const NotificationPanel = ({ isOpen, onClose }) => {
       }
     };
 
-    generateRecentNotifications();
-  }, [isOpen]);
+    loadNotifications();
+  }, [isOpen, onMarkAllRead]);
 
   const getColorClasses = (color) => {
     switch (color) {

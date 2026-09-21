@@ -80,6 +80,9 @@ export const taskService = {
     const response = await api.post('/tasks', data, {
       headers: { 'Content-Type': 'application/json' },
     });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
     return response.data;
   },
 
@@ -87,11 +90,17 @@ export const taskService = {
     const response = await api.put(`/tasks/${id}`, data, {
       headers: { 'Content-Type': 'application/json' },
     });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
     return response.data;
   },
 
   deleteTask: async (id) => {
     const response = await api.delete(`/tasks/${id}`);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
     return response.data;
   },
 };

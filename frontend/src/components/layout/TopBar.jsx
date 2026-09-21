@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,6 +18,11 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getInitials } from '../../utils/constants';
+import { taskService } from '../../services/taskService';
+import {
+  generateNotificationsFromTasks,
+  getReadNotificationIds,
+} from '../../utils/notifications';
 import NotificationPanel from './NotificationPanel';
 import GlobalSearchModal from './GlobalSearchModal';
 
@@ -37,6 +42,43 @@ const TopBar = ({ title, subtitle }) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const checkUnreadNotifications = useCallback(async () => {
+    try {
+      const response = await taskService.getTasks({ sortBy: 'updatedAt', order: 'desc' });
+      const items = generateNotificationsFromTasks(response.data || []);
+      const readIds = getReadNotificationIds();
+      const unread = items.filter((item) => !readIds.includes(item.id)).length;
+      setUnreadCount(unread);
+    } catch {
+      // Graceful fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    checkUnreadNotifications();
+
+    const handleNotificationsRead = () => {
+      setUnreadCount(0);
+    };
+
+    const handleTaskflowUpdated = () => {
+      checkUnreadNotifications();
+    };
+
+    window.addEventListener('taskflow_notifications_read', handleNotificationsRead);
+    window.addEventListener('taskflow_notifications_updated', handleTaskflowUpdated);
+
+    // Periodic check every 60s
+    const interval = setInterval(checkUnreadNotifications, 60000);
+
+    return () => {
+      window.removeEventListener('taskflow_notifications_read', handleNotificationsRead);
+      window.removeEventListener('taskflow_notifications_updated', handleTaskflowUpdated);
+      clearInterval(interval);
+    };
+  }, [checkUnreadNotifications]);
 
   // Global keyboard shortcut for Cmd+K (Mac) / Ctrl+K (Windows/Linux)
   useEffect(() => {
@@ -95,17 +137,29 @@ const TopBar = ({ title, subtitle }) => {
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                title="Notifications"
-                className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 relative transition-colors"
+                onClick={() => {
+                  setNotificationsOpen((prev) => !prev);
+                  if (!notificationsOpen) {
+                    setUnreadCount(0);
+                  }
+                }}
+                title={
+                  unreadCount > 0
+                    ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
+                    : 'Notifications'
+                }
+                className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white relative transition-colors cursor-pointer"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full" />
+                {unreadCount > 0 && !notificationsOpen && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-nimbus-900 animate-pulse" />
+                )}
               </button>
 
               <NotificationPanel
                 isOpen={notificationsOpen}
                 onClose={() => setNotificationsOpen(false)}
+                onMarkAllRead={() => setUnreadCount(0)}
               />
             </div>
 
