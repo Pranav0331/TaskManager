@@ -149,7 +149,7 @@ const TasksPage = () => {
           onAction={!search && !status && !priority ? handleCreate : undefined}
         />
       ) : (
-        <TaskTable tasks={tasks} onEdit={handleEdit} onDelete={handleDelete} />
+        <TaskTable tasks={tasks} onEdit={handleEdit} onDelete={handleDelete} onTaskUpdated={fetchTasks} />
       )}
 
       {/* Create/Edit Modal */}

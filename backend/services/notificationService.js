@@ -284,7 +284,77 @@ export const sendTaskNotification = async ({ type, task, userId, initiatorName, 
           };
           break;
 
-        // 8. Test Notification
+        // 8. Subtask Created
+        case 'subtask_created':
+          if (prefs.created === false) continue;
+          payload = {
+            title: `✨ New Subtask Added — ${task?.subtask?.title || taskTitle}`,
+            body: customMessage || `Added to parent task "${taskTitle}".`,
+            tag: `subtask-created-${task?.subtask?._id || task?._id || 'subtask'}`,
+            type: 'created',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 9. Subtask Updated
+        case 'subtask_updated':
+          if (prefs.updated === false) continue;
+          payload = {
+            title: `📝 Subtask Updated — ${task?.subtask?.title || taskTitle}`,
+            body: customMessage || `Updated in parent task "${taskTitle}".`,
+            tag: `subtask-updated-${task?.subtask?._id || task?._id || 'subtask'}`,
+            type: 'updated',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 10. Subtask Completed
+        case 'subtask_completed':
+          if (prefs.completed === false) continue;
+          payload = {
+            title: `✅ Subtask Completed — ${task?.subtask?.title || taskTitle}`,
+            body: customMessage || `Completed in parent task "${taskTitle}".`,
+            tag: `subtask-completed-${task?.subtask?._id || task?._id || 'subtask'}`,
+            type: 'completed',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 11. Subtask Due Soon
+        case 'subtask_due_date':
+          if (prefs.dueDates === false && prefs.reminders === false) continue;
+          payload = {
+            title: `⏰ Subtask Due Soon — ${task?.subtask?.title || taskTitle}`,
+            body: customMessage || `Subtask in "${taskTitle}" is approaching its deadline.`,
+            tag: `subtask-due-${task?.subtask?._id || task?._id || 'subtask'}`,
+            type: 'due_date',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 12. Subtask Overdue
+        case 'subtask_overdue':
+          if (prefs.overdue === false) continue;
+          payload = {
+            title: `⚠️ Subtask Overdue — ${task?.subtask?.title || taskTitle}`,
+            body: customMessage || `Subtask in "${taskTitle}" has passed its due date.`,
+            tag: `subtask-overdue-${task?.subtask?._id || task?._id || 'subtask'}`,
+            type: 'overdue',
+            taskId: task?._id,
+            url: task?._id ? `/tasks/${task._id}` : '/tasks',
+            actions: [{ action: 'open_task', title: 'View Task' }],
+          };
+          break;
+
+        // 13. Test Notification
         case 'test':
           payload = {
             title: '🔔 Test Notification from TaskFlow',

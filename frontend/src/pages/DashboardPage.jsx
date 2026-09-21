@@ -325,34 +325,62 @@ const DashboardPage = () => {
                   </button>
                 </div>
               ) : (
-                displayedTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-nimbus-50/70 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800 hover:bg-nimbus-100/70 dark:hover:bg-nimbus-800/70 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <button
-                        type="button"
-                        onClick={(e) => handleQuickComplete(task._id, e)}
-                        title="Mark Completed"
-                        className="w-5 h-5 rounded border border-nimbus-300 dark:border-nimbus-600 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center justify-center text-transparent hover:text-emerald-600 transition-colors flex-shrink-0 cursor-pointer"
-                      >
-                        <CheckSquare className="w-3.5 h-3.5" />
-                      </button>
-                      <Link
-                        to={`/tasks/${task._id}`}
-                        className="text-sm font-medium text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
-                      >
-                        {task.title}
-                      </Link>
-                    </div>
+                displayedTasks.map((task) => {
+                  const subtasks = task.subtasks || [];
+                  const hasSubtasks = subtasks.length > 0;
+                  const completedSubtasks = subtasks.filter((s) => s.status === 'Completed').length;
+                  const allSubtasksDone = hasSubtasks && completedSubtasks === subtasks.length;
 
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                      <Badge variant={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
-                      {getUrgencyBadge(task.dueDate, task.status)}
+                  return (
+                    <div
+                      key={task._id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-nimbus-50/70 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800 hover:bg-nimbus-100/70 dark:hover:bg-nimbus-800/70 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <button
+                          type="button"
+                          onClick={(e) => handleQuickComplete(task._id, e)}
+                          title="Mark Completed"
+                          className="w-5 h-5 rounded border border-nimbus-300 dark:border-nimbus-600 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center justify-center text-transparent hover:text-emerald-600 transition-colors flex-shrink-0 cursor-pointer"
+                        >
+                          <CheckSquare className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="min-w-0 flex items-center gap-2 flex-wrap">
+                          <Link
+                            to={`/tasks/${task._id}`}
+                            className="text-sm font-medium text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
+                          >
+                            {task.title}
+                          </Link>
+                          {hasSubtasks && (
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                allSubtasksDone
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                  : 'bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300'
+                              }`}
+                            >
+                              {allSubtasksDone ? (
+                                <>
+                                  <CheckCircle2 className="w-2.5 h-2.5" /> All subtasks completed
+                                </>
+                              ) : (
+                                <>
+                                  <ListTodo className="w-2.5 h-2.5" /> {completedSubtasks}/{subtasks.length} subtasks
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                        <Badge variant={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
+                        {getUrgencyBadge(task.dueDate, task.status)}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -440,9 +468,17 @@ const DashboardPage = () => {
                 className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 hover:bg-nimbus-50/70 dark:hover:bg-nimbus-800/40 transition-colors gap-2 group"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {task.title}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      {task.title}
+                    </p>
+                    {task.subtasks?.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300">
+                        <ListTodo className="w-2.5 h-2.5" />
+                        {task.subtasks.filter((s) => s.status === 'Completed').length}/{task.subtasks.length} subtasks
+                      </span>
+                    )}
+                  </div>
                   {task.description && (
                     <p className="text-xs text-nimbus-500 truncate mt-0.5 max-w-xl">
                       {task.description}

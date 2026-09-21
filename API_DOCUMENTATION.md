@@ -249,6 +249,104 @@ DELETE /api/tasks/:id
 
 ---
 
+## Subtasks
+
+### Add Subtask to Task
+```
+POST /api/tasks/:id/subtasks
+```
+🔒 Protected
+
+**Request Body:**
+```json
+{
+  "title": "Design Database Schema",
+  "description": "Include user and task relationships",
+  "status": "Pending",
+  "priority": "High",
+  "dueDate": "2026-09-25T00:00:00.000Z"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Subtask added successfully",
+  "data": { ... }
+}
+```
+
+---
+
+### Update Subtask
+```
+PUT /api/tasks/:id/subtasks/:subtaskId
+```
+🔒 Protected
+
+**Request Body:** (any field optional)
+```json
+{
+  "title": "Updated Subtask Title",
+  "status": "Completed",
+  "priority": "Medium",
+  "dueDate": "2026-09-26T00:00:00.000Z"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Subtask updated successfully",
+  "data": { ... }
+}
+```
+
+---
+
+### Toggle Subtask Status
+```
+PATCH /api/tasks/:id/subtasks/:subtaskId/toggle
+```
+🔒 Protected
+
+**Request Body:**
+```json
+{
+  "status": "Completed"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Subtask status updated",
+  "data": { ... }
+}
+```
+
+---
+
+### Delete Subtask
+```
+DELETE /api/tasks/:id/subtasks/:subtaskId
+```
+🔒 Protected
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Subtask deleted successfully",
+  "data": { ... }
+}
+```
+
+---
+
 ## Health Check
 
 ### API Status

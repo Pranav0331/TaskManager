@@ -61,9 +61,69 @@ export const checkTaskDeadlinesAndReminders = async () => {
       }
     }
 
-    if (upcomingTasks.length > 0 || overdueTasks.length > 0) {
+    // 3. Scan subtasks with separate upcoming due dates
+    const tasksWithSubtasks = await Task.find({
+      'subtasks.status': { $ne: 'Completed' },
+      'subtasks.dueDate': { $ne: null },
+    });
+
+    let subtaskNotificationsCount = 0;
+    for (const task of tasksWithSubtasks) {
+      let taskDirty = false;
+      const recipientId = task.assignedTo || task.userId;
+      if (!recipientId) continue;
+
+      for (const subtask of task.subtasks) {
+        if (subtask.status === 'Completed' || !subtask.dueDate) continue;
+
+        const subDue = new Date(subtask.dueDate);
+
+        // Subtask upcoming deadline
+        if (
+          subDue >= now &&
+          subDue <= twentyFourHoursFromNow &&
+          (!subtask.reminderSentAt || subtask.reminderSentAt < twentyFourHoursAgo)
+        ) {
+          await sendTaskNotification({
+            type: 'subtask_due_date',
+            task: {
+              ...task.toObject(),
+              subtask: subtask.toObject ? subtask.toObject() : subtask,
+            },
+            userId: recipientId,
+          });
+          subtask.reminderSentAt = new Date();
+          taskDirty = true;
+          subtaskNotificationsCount++;
+        }
+
+        // Subtask overdue
+        if (
+          subDue < now &&
+          (!subtask.overdueSentAt || subtask.overdueSentAt < twentyFourHoursAgo)
+        ) {
+          await sendTaskNotification({
+            type: 'subtask_overdue',
+            task: {
+              ...task.toObject(),
+              subtask: subtask.toObject ? subtask.toObject() : subtask,
+            },
+            userId: recipientId,
+          });
+          subtask.overdueSentAt = new Date();
+          taskDirty = true;
+          subtaskNotificationsCount++;
+        }
+      }
+
+      if (taskDirty) {
+        await task.save();
+      }
+    }
+
+    if (upcomingTasks.length > 0 || overdueTasks.length > 0 || subtaskNotificationsCount > 0) {
       console.log(
-        `[Scheduler] Processed notifications: ${upcomingTasks.length} upcoming reminders, ${overdueTasks.length} overdue alerts.`
+        `[Scheduler] Processed notifications: ${upcomingTasks.length} upcoming tasks, ${overdueTasks.length} overdue tasks, ${subtaskNotificationsCount} subtask alerts.`
       );
     }
   } catch (error) {

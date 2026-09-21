@@ -13,16 +13,32 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
   const today = useMemo(() => new Date(), []);
   const [currentMonth, setCurrentMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 
-  // Map task dates to counts / indicators
+  // Map task and subtask dates to counts / indicators
   const tasksByDate = useMemo(() => {
     const map = new Map();
     tasks.forEach((task) => {
-      if (!task.dueDate) return;
-      const d = new Date(task.dueDate);
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      const existing = map.get(key) || [];
-      existing.push(task);
-      map.set(key, existing);
+      if (task.dueDate) {
+        const d = new Date(task.dueDate);
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        const existing = map.get(key) || [];
+        existing.push(task);
+        map.set(key, existing);
+      }
+      if (Array.isArray(task.subtasks)) {
+        task.subtasks.forEach((subtask) => {
+          if (subtask.dueDate) {
+            const d = new Date(subtask.dueDate);
+            const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+            const existing = map.get(key) || [];
+            existing.push({
+              ...subtask,
+              isSubtask: true,
+              parentTaskId: task._id,
+            });
+            map.set(key, existing);
+          }
+        });
+      }
     });
     return map;
   }, [tasks]);

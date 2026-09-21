@@ -7,8 +7,9 @@ import {
   Plus,
   Clock,
   CheckSquare,
-  AlertTriangle,
   RotateCcw,
+  ListTodo,
+  Check,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -61,12 +62,35 @@ const CalendarPage = () => {
   const tasksByDate = useMemo(() => {
     const map = new Map();
     tasks.forEach((task) => {
-      if (!task.dueDate) return;
-      const d = new Date(task.dueDate);
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      const existing = map.get(key) || [];
-      existing.push(task);
-      map.set(key, existing);
+      // Map main task due date
+      if (task.dueDate) {
+        const d = new Date(task.dueDate);
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        const existing = map.get(key) || [];
+        existing.push({
+          ...task,
+          isSubtask: false,
+        });
+        map.set(key, existing);
+      }
+
+      // Map each subtask due date
+      if (Array.isArray(task.subtasks)) {
+        task.subtasks.forEach((subtask) => {
+          if (subtask.dueDate) {
+            const d = new Date(subtask.dueDate);
+            const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+            const existing = map.get(key) || [];
+            existing.push({
+              ...subtask,
+              isSubtask: true,
+              parentTaskId: task._id,
+              parentTaskTitle: task.title,
+            });
+            map.set(key, existing);
+          }
+        });
+      }
     });
     return map;
   }, [tasks]);
@@ -134,12 +158,19 @@ const CalendarPage = () => {
     }
   };
 
-  const handleQuickComplete = async (taskId, e) => {
+  const handleQuickComplete = async (item, e) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await taskService.updateTask(taskId, { status: 'Completed' });
-      toast.success('Task marked completed!');
+      if (item.isSubtask) {
+        const nextStatus = item.status === 'Completed' ? 'Pending' : 'Completed';
+        await taskService.toggleSubtask(item.parentTaskId, item._id, nextStatus);
+        toast.success(nextStatus === 'Completed' ? 'Subtask marked completed!' : 'Subtask marked pending!');
+      } else {
+        const nextStatus = item.status === 'Completed' ? 'Pending' : 'Completed';
+        await taskService.updateTask(item._id, { status: nextStatus });
+        toast.success(nextStatus === 'Completed' ? 'Task marked completed!' : 'Task marked pending!');
+      }
       fetchTasks();
     } catch (err) {
       toast.error('Failed to update task');
@@ -165,7 +196,7 @@ const CalendarPage = () => {
             Calendar & Schedule
           </h2>
           <p className="text-nimbus-500 mt-1 text-sm">
-            View deadline distribution, track due dates and schedule upcoming tasks.
+            View deadline distribution, track tasks and subtask due dates.
           </p>
         </div>
 
@@ -275,13 +306,17 @@ const CalendarPage = () => {
                   </div>
 
                   <div className="space-y-1 mt-1">
-                    {dayTasks.slice(0, 2).map((task) => (
+                    {dayTasks.slice(0, 2).map((taskItem) => (
                       <div
-                        key={task._id}
-                        className="text-[10px] font-medium truncate px-1.5 py-0.5 rounded bg-white/80 dark:bg-nimbus-800 text-nimbus-700 dark:text-nimbus-300 border border-nimbus-200/50 dark:border-nimbus-700/50"
-                        title={task.title}
+                        key={taskItem._id}
+                        className={`text-[10px] font-medium truncate px-1.5 py-0.5 rounded border ${
+                          taskItem.isSubtask
+                            ? 'bg-amber-50/80 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200/50 dark:border-amber-800/40'
+                            : 'bg-white/80 dark:bg-nimbus-800 text-nimbus-700 dark:text-nimbus-300 border-nimbus-200/50 dark:border-nimbus-700/50'
+                        }`}
+                        title={taskItem.isSubtask ? `Subtask: ${taskItem.title} (Parent: ${taskItem.parentTaskTitle})` : taskItem.title}
                       >
-                        {task.title}
+                        {taskItem.isSubtask ? `↳ ${taskItem.title}` : taskItem.title}
                       </div>
                     ))}
                     {dayTasks.length > 2 && (
@@ -309,7 +344,7 @@ const CalendarPage = () => {
                   })}
                 </h3>
                 <p className="text-xs text-nimbus-500">
-                  {selectedDateTasks.length} task{selectedDateTasks.length !== 1 ? 's' : ''} due
+                  {selectedDateTasks.length} deadline{selectedDateTasks.length !== 1 ? 's' : ''} scheduled
                 </p>
               </div>
 
@@ -333,7 +368,7 @@ const CalendarPage = () => {
                 <div className="py-12 text-center bg-nimbus-50/40 dark:bg-nimbus-800/20 rounded-xl border border-dashed border-nimbus-200 dark:border-nimbus-800 p-4">
                   <Clock className="w-8 h-8 text-nimbus-400 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-nimbus-800 dark:text-nimbus-200">
-                    No tasks scheduled
+                    No tasks or subtasks scheduled
                   </p>
                   <p className="text-xs text-nimbus-500 mt-0.5">
                     Click below to add a task for this date.
@@ -347,37 +382,62 @@ const CalendarPage = () => {
                   </button>
                 </div>
               ) : (
-                selectedDateTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="p-3 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800 hover:bg-nimbus-100/70 transition-colors group"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <button
-                          type="button"
-                          onClick={(e) => handleQuickComplete(task._id, e)}
-                          title="Mark Complete"
-                          className="w-4 h-4 rounded border border-nimbus-300 dark:border-nimbus-600 hover:border-emerald-500 hover:bg-emerald-50 flex items-center justify-center text-transparent hover:text-emerald-600 transition-colors flex-shrink-0"
-                        >
-                          <CheckSquare className="w-3 h-3" />
-                        </button>
-                        <Link
-                          to={`/tasks/${task._id}`}
-                          className="text-sm font-medium text-nimbus-900 dark:text-white truncate hover:text-brand-600 transition-colors"
-                        >
-                          {task.title}
-                        </Link>
-                      </div>
-                      <Badge variant={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
-                    </div>
+                selectedDateTasks.map((item) => {
+                  const isDone = item.status === 'Completed';
+                  const targetLink = item.isSubtask ? `/tasks/${item.parentTaskId}` : `/tasks/${item._id}`;
 
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-nimbus-200/40 dark:border-nimbus-700/30 text-[11px] text-nimbus-500">
-                      <Badge variant={STATUS_COLORS[task.status]}>{task.status}</Badge>
-                      <span>{task.dueDate ? formatDate(task.dueDate) : 'No time'}</span>
+                  return (
+                    <div
+                      key={item._id}
+                      className="p-3 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800 hover:bg-nimbus-100/70 transition-colors group"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <button
+                            type="button"
+                            onClick={(e) => handleQuickComplete(item, e)}
+                            title={isDone ? 'Mark Pending' : 'Mark Complete'}
+                            className={`w-4 h-4 mt-0.5 rounded flex items-center justify-center transition-colors flex-shrink-0 cursor-pointer ${
+                              isDone
+                                ? 'bg-emerald-600 text-white border border-emerald-600'
+                                : 'border border-nimbus-300 dark:border-nimbus-600 hover:border-emerald-500 hover:bg-emerald-50'
+                            }`}
+                          >
+                            {isDone ? <Check className="w-3 h-3 stroke-[3]" /> : <CheckSquare className="w-3 h-3 text-transparent hover:text-emerald-600" />}
+                          </button>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              {item.isSubtask && (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 flex-shrink-0">
+                                  Subtask
+                                </span>
+                              )}
+                              <Link
+                                to={targetLink}
+                                className={`text-sm font-medium truncate hover:text-brand-600 transition-colors ${
+                                  isDone ? 'line-through text-nimbus-400' : 'text-nimbus-900 dark:text-white'
+                                }`}
+                              >
+                                {item.title}
+                              </Link>
+                            </div>
+                            {item.isSubtask && item.parentTaskTitle && (
+                              <p className="text-[11px] text-nimbus-400 truncate mt-0.5">
+                                in <span className="font-medium text-nimbus-600 dark:text-nimbus-300">{item.parentTaskTitle}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Badge variant={PRIORITY_COLORS[item.priority]}>{item.priority}</Badge>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-nimbus-200/40 dark:border-nimbus-700/30 text-[11px] text-nimbus-500">
+                        <Badge variant={STATUS_COLORS[item.status]}>{item.status}</Badge>
+                        <span>{item.dueDate ? formatDate(item.dueDate) : 'No time'}</span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

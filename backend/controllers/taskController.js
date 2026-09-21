@@ -153,14 +153,30 @@ export const getTask = async (req, res) => {
  */
 export const createTask = async (req, res) => {
   try {
-    const { title, description, status, priority, dueDate, assignedTo } = req.body;
+    const { title, description, status, priority, dueDate, assignedTo, subtasks } = req.body;
+
+    const parsedSubtasks = Array.isArray(subtasks)
+      ? subtasks.map((s) => ({
+          title: (s.title || '').trim(),
+          description: (s.description || '').trim(),
+          status: s.status || 'Pending',
+          priority: s.priority || 'Medium',
+          dueDate: s.dueDate || null,
+        })).filter((s) => s.title)
+      : [];
+
+    let initialStatus = status || 'Pending';
+    if (parsedSubtasks.length > 0 && parsedSubtasks.every((s) => s.status === 'Completed')) {
+      initialStatus = 'Completed';
+    }
 
     const task = await Task.create({
       title,
       description,
-      status,
+      status: initialStatus,
       priority,
       dueDate: dueDate || null,
+      subtasks: parsedSubtasks,
       userId: req.user._id,
       assignedTo: assignedTo || req.user._id,
     });
@@ -221,18 +237,40 @@ export const updateTask = async (req, res) => {
 
     const prevStatus = task.status;
     const prevAssignedTo = task.assignedTo?.toString();
-    const { title, description, status, priority, dueDate, assignedTo } = req.body;
+    const { title, description, status, priority, dueDate, assignedTo, subtasks } = req.body;
+
+    const updateData = {
+      title: title ?? task.title,
+      description: description ?? task.description,
+      status: status ?? task.status,
+      priority: priority ?? task.priority,
+      dueDate: dueDate !== undefined ? dueDate : task.dueDate,
+      assignedTo: assignedTo !== undefined ? assignedTo : task.assignedTo,
+    };
+
+    if (Array.isArray(subtasks)) {
+      updateData.subtasks = subtasks.map((s) => ({
+        _id: s._id || s.id,
+        title: (s.title || '').trim(),
+        description: (s.description || '').trim(),
+        status: s.status || 'Pending',
+        priority: s.priority || 'Medium',
+        dueDate: s.dueDate || null,
+      })).filter((s) => s.title);
+
+      if (updateData.subtasks.length > 0) {
+        const allCompleted = updateData.subtasks.every((s) => s.status === 'Completed');
+        if (allCompleted) {
+          updateData.status = 'Completed';
+        } else if (task.status === 'Completed' && status === undefined) {
+          updateData.status = 'In Progress';
+        }
+      }
+    }
 
     task = await Task.findByIdAndUpdate(
       req.params.id,
-      {
-        title: title ?? task.title,
-        description: description ?? task.description,
-        status: status ?? task.status,
-        priority: priority ?? task.priority,
-        dueDate: dueDate !== undefined ? dueDate : task.dueDate,
-        assignedTo: assignedTo !== undefined ? assignedTo : task.assignedTo,
-      },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -241,7 +279,7 @@ export const updateTask = async (req, res) => {
     );
 
     // Asynchronously trigger notification for completion across all user devices
-    if (status === 'Completed' && prevStatus !== 'Completed') {
+    if (task.status === 'Completed' && prevStatus !== 'Completed') {
       sendTaskNotification({
         type: 'completed',
         task,
@@ -328,5 +366,238 @@ export const deleteTask = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+/**
+ * @desc    Add a subtask to parent task
+ * @route   POST /api/tasks/:id/subtasks
+ * @access  Private
+ */
+export const addSubtask = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    });
+
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Task not found' });
+    }
+
+    const { title, description, status = 'Pending', priority = 'Medium', dueDate } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: 'Subtask title is required' });
+    }
+
+    task.subtasks.push({
+      title: title.trim(),
+      description: description ? description.trim() : '',
+      status,
+      priority,
+      dueDate: dueDate || null,
+    });
+
+    if (task.subtasks.length > 0 && task.subtasks.every((s) => s.status === 'Completed')) {
+      task.status = 'Completed';
+    }
+
+    await task.save();
+
+    const createdSubtask = task.subtasks[task.subtasks.length - 1];
+    const recipients = Array.from(
+      new Set([task.userId?.toString(), task.assignedTo?.toString()].filter(Boolean))
+    );
+
+    sendTaskNotification({
+      type: 'subtask_created',
+      task: {
+        ...task.toObject(),
+        subtask: createdSubtask.toObject(),
+      },
+      userId: recipients,
+      initiatorName: req.user.name,
+    }).catch((err) => console.error('[Subtask] Notification error on create:', err.message));
+
+    res.status(201).json({
+      success: true,
+      message: 'Subtask added successfully',
+      data: task,
+      subtask: createdSubtask,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Update a subtask inside parent task
+ * @route   PUT /api/tasks/:id/subtasks/:subtaskId
+ * @access  Private
+ */
+export const updateSubtask = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    });
+
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Task not found' });
+    }
+
+    const subtask = task.subtasks.id(req.params.subtaskId);
+    if (!subtask) {
+      return res.status(404).json({ success: false, message: 'Subtask not found' });
+    }
+
+    const prevSubtaskStatus = subtask.status;
+    const { title, description, status, priority, dueDate } = req.body;
+
+    if (title !== undefined) subtask.title = title.trim();
+    if (description !== undefined) subtask.description = description.trim();
+    if (status !== undefined) subtask.status = status;
+    if (priority !== undefined) subtask.priority = priority;
+    if (dueDate !== undefined) subtask.dueDate = dueDate || null;
+
+    if (task.subtasks.length > 0) {
+      const allCompleted = task.subtasks.every((s) => s.status === 'Completed');
+      if (allCompleted) {
+        task.status = 'Completed';
+      } else if (task.status === 'Completed' && status !== 'Completed') {
+        task.status = 'In Progress';
+      }
+    }
+
+    await task.save();
+
+    const recipients = Array.from(
+      new Set([task.userId?.toString(), task.assignedTo?.toString()].filter(Boolean))
+    );
+
+    const notificationType =
+      status === 'Completed' && prevSubtaskStatus !== 'Completed'
+        ? 'subtask_completed'
+        : 'subtask_updated';
+
+    sendTaskNotification({
+      type: notificationType,
+      task: {
+        ...task.toObject(),
+        subtask: subtask.toObject(),
+      },
+      userId: recipients,
+      initiatorName: req.user.name,
+    }).catch((err) => console.error('[Subtask] Notification error on update:', err.message));
+
+    res.json({
+      success: true,
+      message: 'Subtask updated successfully',
+      data: task,
+      subtask,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Toggle subtask completion status
+ * @route   PATCH /api/tasks/:id/subtasks/:subtaskId/toggle
+ * @access  Private
+ */
+export const toggleSubtask = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    });
+
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Task not found' });
+    }
+
+    const subtask = task.subtasks.id(req.params.subtaskId);
+    if (!subtask) {
+      return res.status(404).json({ success: false, message: 'Subtask not found' });
+    }
+
+    const newStatus = subtask.status === 'Completed' ? 'Pending' : 'Completed';
+    subtask.status = newStatus;
+
+    if (task.subtasks.length > 0) {
+      const allCompleted = task.subtasks.every((s) => s.status === 'Completed');
+      if (allCompleted) {
+        task.status = 'Completed';
+      } else if (task.status === 'Completed' && newStatus !== 'Completed') {
+        task.status = 'In Progress';
+      }
+    }
+
+    await task.save();
+
+    const recipients = Array.from(
+      new Set([task.userId?.toString(), task.assignedTo?.toString()].filter(Boolean))
+    );
+
+    if (newStatus === 'Completed') {
+      sendTaskNotification({
+        type: 'subtask_completed',
+        task: {
+          ...task.toObject(),
+          subtask: subtask.toObject(),
+        },
+        userId: recipients,
+        initiatorName: req.user.name,
+      }).catch((err) => console.error('[Subtask] Notification error on toggle complete:', err.message));
+    }
+
+    res.json({
+      success: true,
+      message: `Subtask marked ${newStatus.toLowerCase()}`,
+      data: task,
+      subtask,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Delete a subtask from parent task
+ * @route   DELETE /api/tasks/:id/subtasks/:subtaskId
+ * @access  Private
+ */
+export const deleteSubtask = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ userId: req.user._id }, { assignedTo: req.user._id }],
+    });
+
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Task not found' });
+    }
+
+    const subtask = task.subtasks.id(req.params.subtaskId);
+    if (!subtask) {
+      return res.status(404).json({ success: false, message: 'Subtask not found' });
+    }
+
+    task.subtasks.pull({ _id: req.params.subtaskId });
+
+    if (task.subtasks.length > 0 && task.subtasks.every((s) => s.status === 'Completed')) {
+      task.status = 'Completed';
+    }
+
+    await task.save();
+
+    res.json({
+      success: true,
+      message: 'Subtask deleted successfully',
+      data: task,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

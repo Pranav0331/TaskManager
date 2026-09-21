@@ -103,4 +103,40 @@ export const taskService = {
     }
     return response.data;
   },
+
+  addSubtask: async (taskId, data) => {
+    const response = await api.post(`/tasks/${taskId}/subtasks`, data, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
+    return response.data;
+  },
+
+  updateSubtask: async (taskId, subtaskId, data) => {
+    const response = await api.put(`/tasks/${taskId}/subtasks/${subtaskId}`, data, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
+    return response.data;
+  },
+
+  toggleSubtask: async (taskId, subtaskId) => {
+    const response = await api.patch(`/tasks/${taskId}/subtasks/${subtaskId}/toggle`);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
+    return response.data;
+  },
+
+  deleteSubtask: async (taskId, subtaskId) => {
+    const response = await api.delete(`/tasks/${taskId}/subtasks/${subtaskId}`);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('taskflow_notifications_updated'));
+    }
+    return response.data;
+  },
 };

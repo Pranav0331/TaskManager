@@ -1,5 +1,47 @@
 import mongoose from 'mongoose';
 
+const subtaskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, 'Subtask title is required'],
+      trim: true,
+      maxlength: [200, 'Subtask title cannot exceed 200 characters'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Subtask description cannot exceed 1000 characters'],
+      default: '',
+    },
+    status: {
+      type: String,
+      enum: ['Pending', 'In Progress', 'Completed'],
+      default: 'Pending',
+    },
+    priority: {
+      type: String,
+      enum: ['Low', 'Medium', 'High'],
+      default: 'Medium',
+    },
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+    reminderSentAt: {
+      type: Date,
+      default: null,
+    },
+    overdueSentAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const taskSchema = new mongoose.Schema(
   {
     title: {
@@ -27,6 +69,10 @@ const taskSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
       default: null,
+    },
+    subtasks: {
+      type: [subtaskSchema],
+      default: [],
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -57,6 +103,7 @@ const taskSchema = new mongoose.Schema(
 // Compound index for efficient user task queries
 taskSchema.index({ userId: 1, status: 1, priority: 1, dueDate: 1 });
 taskSchema.index({ dueDate: 1, status: 1 });
+taskSchema.index({ 'subtasks.dueDate': 1, 'subtasks.status': 1 });
 
 const Task = mongoose.model('Task', taskSchema);
 

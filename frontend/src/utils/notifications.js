@@ -104,6 +104,40 @@ export const generateNotificationsFromTasks = (tasks = []) => {
         priority: 4,
       });
     }
+
+    // 5. Subtask alerts
+    if (Array.isArray(task.subtasks) && task.subtasks.length > 0) {
+      task.subtasks.forEach((subtask) => {
+        if (subtask.status !== 'Completed' && subtask.dueDate) {
+          const subDue = new Date(subtask.dueDate);
+          if (isOverdue(subtask.dueDate, subtask.status)) {
+            items.push({
+              id: `overdue-subtask-${subtask._id || subtask.id}`,
+              taskId: task._id,
+              type: 'subtask_overdue',
+              title: `⚠️ Subtask Overdue: ${subtask.title}`,
+              message: `In "${task.title}" (Due: ${formatDate(subtask.dueDate)}).`,
+              time: subtask.updatedAt || subtask.createdAt || task.updatedAt,
+              icon: AlertTriangle,
+              color: 'rose',
+              priority: 1,
+            });
+          } else if (subDue >= startOfToday && subDue <= endOfToday) {
+            items.push({
+              id: `due-subtask-${subtask._id || subtask.id}`,
+              taskId: task._id,
+              type: 'subtask_due_date',
+              title: `⏰ Subtask Due Today: ${subtask.title}`,
+              message: `In "${task.title}".`,
+              time: subtask.updatedAt || subtask.createdAt || task.updatedAt,
+              icon: Clock,
+              color: 'amber',
+              priority: 2,
+            });
+          }
+        }
+      });
+    }
   });
 
   return items

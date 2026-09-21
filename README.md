@@ -28,8 +28,13 @@
 - **Quick Notes Preview**: Access and review pinned and recent notes directly without leaving the dashboard.
 - **Quick Action Triggers**: One-click modal triggers to create new tasks and notes instantly.
 
-### ✅ Task Management
+### ✅ Task Management & Subtasks
 - **Full CRUD Operations**: Create, view, update, and delete tasks with detailed titles, descriptions, due dates, priority levels, and statuses.
+- **Hierarchical Subtasks**: Every task can have multiple subtasks with independent titles, descriptions, status, priority, and separate due dates.
+- **Subtask Progress Tracking**: Real-time progress indicators (e.g., `3/5 subtasks completed` or `All subtasks completed`) across tables, detail pages, and dashboard.
+- **Auto-Completion Logic**: Parent tasks automatically transition to *Completed* when all subtasks are finished, while remaining independent when individual subtasks are updated.
+- **Calendar Subtask Deadlines**: Subtask due dates and priority tags are individually mapped onto the Calendar and Compact Calendar views.
+- **Subtask Notifications**: Push & in-app alerts for subtask creation, updates, completion, approaching deadlines, and overdue states.
 - **Status & Priority Tracking**: Categorize tasks by status (*Pending*, *In Progress*, *Completed*) and priority (*Low*, *Medium*, *High*).
 - **Overdue Indicators**: Real-time visual alerts and badges identifying overdue tasks.
 - **Debounced Search & Sorting**: Real-time keyword filtering, status tabs, and multi-field sorting (`dueDate`, `createdAt`, `title`, `priority`, `status`).
