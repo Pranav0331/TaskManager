@@ -253,7 +253,7 @@ const NotesPage = () => {
 
             {/* Quick Action Icons */}
             <div
-              className="flex items-center gap-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+              className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -570,18 +570,18 @@ const NotesPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-nimbus-100 dark:border-nimbus-800">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-nimbus-100 dark:border-nimbus-800">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="nimbus-btn-secondary text-xs cursor-pointer"
+              className="nimbus-btn-secondary text-xs cursor-pointer w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="nimbus-btn-primary text-xs cursor-pointer"
+              className="nimbus-btn-primary text-xs cursor-pointer w-full sm:w-auto"
             >
               {saving ? 'Saving...' : editingNote ? 'Save Changes' : 'Create Note'}
             </button>

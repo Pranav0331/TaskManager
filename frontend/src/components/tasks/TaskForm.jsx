@@ -109,9 +109,9 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
       <div>
-        <label className="block text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
+        <label className="block text-xs sm:text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
           Title <span className="text-rose-500">*</span>
         </label>
         <input
@@ -121,12 +121,12 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
           onChange={handleChange}
           required
           placeholder="Enter task title"
-          className="nimbus-input"
+          className="nimbus-input text-sm"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
+        <label className="block text-xs sm:text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
           Description
         </label>
         <textarea
@@ -135,16 +135,21 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
           onChange={handleChange}
           rows={3}
           placeholder="Add a description..."
-          className="nimbus-input resize-none"
+          className="nimbus-input resize-none text-sm"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="block text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
+          <label className="block text-xs sm:text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
             Status
           </label>
-          <select name="status" value={form.status} onChange={handleChange} className="nimbus-input">
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className="nimbus-input text-sm cursor-pointer"
+          >
             <option value="Pending">Pending</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
@@ -152,10 +157,15 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
+          <label className="block text-xs sm:text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
             Priority
           </label>
-          <select name="priority" value={form.priority} onChange={handleChange} className="nimbus-input">
+          <select
+            name="priority"
+            value={form.priority}
+            onChange={handleChange}
+            className="nimbus-input text-sm cursor-pointer"
+          >
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
             <option value="High">High</option>
@@ -163,7 +173,7 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
+          <label className="block text-xs sm:text-sm font-medium text-nimbus-700 dark:text-nimbus-300 mb-1.5">
             Due Date
           </label>
           <input
@@ -171,17 +181,17 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
             name="dueDate"
             value={form.dueDate}
             onChange={handleChange}
-            className="nimbus-input"
+            className="nimbus-input text-sm"
           />
         </div>
       </div>
 
       {/* Subtasks Section */}
       <div className="pt-3 border-t border-nimbus-200 dark:border-nimbus-800 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <ListTree className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            <span className="text-sm font-semibold text-nimbus-900 dark:text-white">
+            <span className="text-xs sm:text-sm font-semibold text-nimbus-900 dark:text-white">
               Subtasks
             </span>
             {form.subtasks.length > 0 && (
@@ -205,11 +215,11 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
             No subtasks added yet. Click &quot;+ Add Subtask&quot; to break this task down into smaller steps.
           </p>
         ) : (
-          <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
             {form.subtasks.map((subtask, index) => (
               <div
                 key={subtask.id || index}
-                className="p-3 rounded-xl border border-nimbus-200 dark:border-nimbus-800 bg-nimbus-50/60 dark:bg-nimbus-900/40 space-y-2.5"
+                className="p-3 rounded-xl border border-nimbus-200 dark:border-nimbus-800 bg-nimbus-50/70 dark:bg-nimbus-900/50 space-y-2.5"
               >
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-[11px] font-bold flex items-center justify-center flex-shrink-0">
@@ -221,7 +231,7 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
                     onChange={(e) => handleSubtaskChange(index, 'title', e.target.value)}
                     placeholder="Subtask title *"
                     required
-                    className="flex-1 text-sm bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1.5 text-nimbus-900 dark:text-white placeholder:text-nimbus-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="flex-1 min-w-0 text-xs sm:text-sm bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1.5 text-nimbus-900 dark:text-white placeholder:text-nimbus-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                   <button
                     type="button"
@@ -238,36 +248,51 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
                   value={subtask.description}
                   onChange={(e) => handleSubtaskChange(index, 'description', e.target.value)}
                   placeholder="Optional details or note..."
-                  className="w-full text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1 text-nimbus-800 dark:text-nimbus-200 placeholder:text-nimbus-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1.5 text-nimbus-800 dark:text-nimbus-200 placeholder:text-nimbus-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
 
-                <div className="grid grid-cols-3 gap-2">
-                  <select
-                    value={subtask.status}
-                    onChange={(e) => handleSubtaskChange(index, 'status', e.target.value)}
-                    className="text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2 py-1 text-nimbus-800 dark:text-nimbus-200 focus:outline-none"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-medium text-nimbus-500 mb-0.5 sm:hidden">
+                      Status
+                    </label>
+                    <select
+                      value={subtask.status}
+                      onChange={(e) => handleSubtaskChange(index, 'status', e.target.value)}
+                      className="w-full text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1.5 text-nimbus-800 dark:text-nimbus-200 focus:outline-none"
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
 
-                  <select
-                    value={subtask.priority}
-                    onChange={(e) => handleSubtaskChange(index, 'priority', e.target.value)}
-                    className="text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2 py-1 text-nimbus-800 dark:text-nimbus-200 focus:outline-none"
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
+                  <div>
+                    <label className="block text-[11px] font-medium text-nimbus-500 mb-0.5 sm:hidden">
+                      Priority
+                    </label>
+                    <select
+                      value={subtask.priority}
+                      onChange={(e) => handleSubtaskChange(index, 'priority', e.target.value)}
+                      className="w-full text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1.5 text-nimbus-800 dark:text-nimbus-200 focus:outline-none"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
 
-                  <input
-                    type="date"
-                    value={subtask.dueDate}
-                    onChange={(e) => handleSubtaskChange(index, 'dueDate', e.target.value)}
-                    className="text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2 py-1 text-nimbus-800 dark:text-nimbus-200 focus:outline-none"
-                  />
+                  <div>
+                    <label className="block text-[11px] font-medium text-nimbus-500 mb-0.5 sm:hidden">
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={subtask.dueDate}
+                      onChange={(e) => handleSubtaskChange(index, 'dueDate', e.target.value)}
+                      className="w-full text-xs bg-white dark:bg-nimbus-800 border border-nimbus-200 dark:border-nimbus-700 rounded-lg px-2.5 py-1.5 text-nimbus-800 dark:text-nimbus-200 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -275,13 +300,22 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-nimbus-100 dark:border-nimbus-800">
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onCancel}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
         )}
-        <Button type="submit" loading={loading}>
+        <Button
+          type="submit"
+          loading={loading}
+          className="w-full sm:w-auto"
+        >
           {initialData ? 'Update Task' : 'Create Task'}
         </Button>
       </div>

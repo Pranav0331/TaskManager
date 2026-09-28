@@ -3,17 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu,
-  X,
   Sun,
   Moon,
   Bell,
   LogOut,
-  LayoutDashboard,
-  CheckSquare,
-  Calendar,
-  FileText,
   Settings,
   Search,
+  CheckSquare,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -26,19 +22,10 @@ import {
 import NotificationPanel from './NotificationPanel';
 import GlobalSearchModal from './GlobalSearchModal';
 
-const mobileNavItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { path: '/calendar', label: 'Calendar', icon: Calendar },
-  { path: '/notes', label: 'Notes', icon: FileText },
-  { path: '/settings', label: 'Settings', icon: Settings },
-];
-
-const TopBar = () => {
+const TopBar = ({ onOpenSidebar }) => {
   const { user, logout } = useAuth();
   const { darkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -100,20 +87,34 @@ const TopBar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-20 bg-white/80 dark:bg-nimbus-900/80 backdrop-blur-xl border-b border-nimbus-200 dark:border-nimbus-800">
-        <div className="flex items-center justify-between h-16 px-4 lg:px-8">
-          <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-white/85 dark:bg-nimbus-900/85 backdrop-blur-xl border-b border-nimbus-200 dark:border-nimbus-800">
+        <div className="flex items-center justify-between h-16 px-3 sm:px-4 lg:px-8">
+          {/* Mobile hamburger menu & branding */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-400"
-              aria-label="Open navigation menu"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenSidebar();
+              }}
+              className="lg:hidden p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300 transition-colors cursor-pointer"
+              aria-label="Open sidebar navigation"
             >
               <Menu className="w-5 h-5" />
             </button>
+
+            <div className="lg:hidden flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center shadow-xs">
+                <CheckSquare className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold text-nimbus-900 dark:text-white tracking-tight text-sm sm:text-base">
+                TaskFlow
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right Action Icons (Search, Notifications, Theme, Profile) */}
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -159,10 +160,11 @@ const TopBar = () => {
               />
             </div>
 
+            {/* Dark/Light Theme Toggle */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white transition-colors relative overflow-hidden"
+              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white transition-colors relative overflow-hidden cursor-pointer"
               title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-label="Toggle theme"
             >
@@ -172,7 +174,7 @@ const TopBar = () => {
                   initial={{ y: -8, opacity: 0, rotate: -60, scale: 0.7 }}
                   animate={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
                   exit={{ y: 8, opacity: 0, rotate: 60, scale: 0.7 }}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                   className="flex items-center justify-center"
                 >
                   {darkMode ? (
@@ -184,12 +186,15 @@ const TopBar = () => {
               </AnimatePresence>
             </button>
 
+            {/* Profile Menu Dropdown */}
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800"
+                className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 transition-colors cursor-pointer"
+                aria-label="User profile menu"
               >
-                <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-medium">
+                <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-semibold shadow-2xs">
                   {getInitials(user?.name)}
                 </div>
               </button>
@@ -197,15 +202,16 @@ const TopBar = () => {
               <AnimatePresence>
                 {profileOpen && (
                   <>
-                    <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
+                    <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      className="absolute right-0 mt-2 w-56 nimbus-card py-2 z-20 shadow-nimbus-lg"
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] nimbus-card py-2 z-40 shadow-nimbus-xl border border-nimbus-200 dark:border-nimbus-800"
                     >
                       <div className="px-4 py-3 border-b border-nimbus-200 dark:border-nimbus-800">
-                        <p className="text-sm font-medium text-nimbus-900 dark:text-white">{user?.name}</p>
+                        <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate">{user?.name}</p>
                         <p className="text-xs text-nimbus-500 truncate">{user?.email}</p>
                       </div>
                       <Link
@@ -217,6 +223,7 @@ const TopBar = () => {
                         Settings
                       </Link>
                       <button
+                        type="button"
                         onClick={handleLogout}
                         className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer"
                       >
@@ -231,56 +238,6 @@ const TopBar = () => {
           </div>
         </div>
       </header>
-
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-nimbus-900/50 backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-nimbus-900 shadow-nimbus-xl"
-            >
-              <div className="flex items-center justify-between px-5 h-16 border-b border-nimbus-200 dark:border-nimbus-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-                    <CheckSquare className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="font-semibold">TaskFlow</span>
-                </div>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <nav className="p-4 space-y-1">
-                {mobileNavItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-nimbus-600 dark:text-nimbus-400 hover:bg-nimbus-100 dark:hover:bg-nimbus-800"
-                    >
-                      <Icon className="w-5 h-5" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </>
   );
 };

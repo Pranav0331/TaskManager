@@ -261,12 +261,12 @@ const DashboardPage = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="lg:col-span-7 nimbus-card p-6 flex flex-col justify-between"
+          className="lg:col-span-7 nimbus-card p-4 sm:p-6 flex flex-col justify-between"
         >
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-nimbus-100 dark:border-nimbus-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">
+            <div className="flex items-center justify-between pb-4 border-b border-nimbus-100 dark:border-nimbus-800 gap-2">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex-shrink-0">
                   <CheckSquare className="w-5 h-5" />
                 </div>
                 <div>
@@ -423,7 +423,7 @@ const DashboardPage = () => {
         transition={{ delay: 0.3 }}
         className="nimbus-card"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nimbus-100 dark:border-nimbus-800">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-nimbus-100 dark:border-nimbus-800">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
               <CalendarClock className="w-5 h-5" />
@@ -444,13 +444,13 @@ const DashboardPage = () => {
         </div>
 
         {loading ? (
-          <div className="p-6 space-y-3">
+          <div className="p-4 sm:p-6 space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="h-12 bg-nimbus-100 dark:bg-nimbus-800 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : upcomingTasks.length === 0 ? (
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <CalendarIcon className="w-8 h-8 text-nimbus-400 mx-auto mb-2" />
             <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
               No Upcoming Deadlines
@@ -465,7 +465,7 @@ const DashboardPage = () => {
               <Link
                 key={task._id}
                 to={`/tasks/${task._id}`}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 hover:bg-nimbus-50/70 dark:hover:bg-nimbus-800/40 transition-colors gap-2 group"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 px-4 sm:px-6 hover:bg-nimbus-50/70 dark:hover:bg-nimbus-800/40 transition-colors gap-2 group"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">

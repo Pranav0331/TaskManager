@@ -67,7 +67,7 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAllRead }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 nimbus-card p-0 z-30 shadow-nimbus-xl overflow-hidden border border-nimbus-200 dark:border-nimbus-800"
+            className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 nimbus-card p-0 z-30 shadow-nimbus-xl overflow-hidden border border-nimbus-200 dark:border-nimbus-800"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-nimbus-200 dark:border-nimbus-800 bg-nimbus-50/50 dark:bg-nimbus-900/50">

@@ -152,13 +152,13 @@ const SettingsPage = () => {
         transition={{ delay: 0.05 }}
         className="nimbus-card"
       >
-        <div className="px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">
+            <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex-shrink-0">
               <Bell className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-nimbus-900 dark:text-white">
+              <h3 className="text-base sm:text-lg font-semibold text-nimbus-900 dark:text-white">
                 Multi-Device Push Notifications
               </h3>
               <p className="text-xs text-nimbus-500">
@@ -166,17 +166,19 @@ const SettingsPage = () => {
               </p>
             </div>
           </div>
-          {getPermissionBadge()}
+          <div className="self-start sm:self-auto">
+            {getPermissionBadge()}
+          </div>
         </div>
 
-        <div className="px-6 py-5 space-y-6">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6">
           {/* Master Enable/Disable Switch */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800/60">
+          <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/40 border border-nimbus-100 dark:border-nimbus-800/60 gap-3">
             <div>
-              <p className="text-sm font-semibold text-nimbus-900 dark:text-white">
+              <p className="text-xs sm:text-sm font-semibold text-nimbus-900 dark:text-white">
                 Enable Notifications on this Device
               </p>
-              <p className="text-xs text-nimbus-500 mt-0.5">
+              <p className="text-[11px] sm:text-xs text-nimbus-500 mt-0.5">
                 {isSubscribed
                   ? 'This device is registered and receives real-time task alerts'
                   : 'Allow this device to receive task updates and reminders'}
@@ -187,7 +189,7 @@ const SettingsPage = () => {
               type="button"
               disabled={!isSupported || actionLoading || pushLoading}
               onClick={handleMasterToggle}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 ${
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 flex-shrink-0 cursor-pointer ${
                 isSubscribed ? 'bg-brand-600' : 'bg-nimbus-300 dark:bg-nimbus-700'
               }`}
             >
@@ -209,10 +211,10 @@ const SettingsPage = () => {
           {/* Test Notification Button & Manage Devices Link */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
             <div>
-              <p className="text-sm font-medium text-nimbus-900 dark:text-white">Test Delivery</p>
+              <p className="text-xs sm:text-sm font-medium text-nimbus-900 dark:text-white">Test Delivery</p>
               <p className="text-xs text-nimbus-500">Send an instant test alert to ALL your registered devices</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap self-start sm:self-auto">
               {activeSubscriptionsCount > 0 && (
                 <Button
                   type="button"

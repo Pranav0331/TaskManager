@@ -200,7 +200,7 @@ const QuickNotesCard = () => {
                         type="button"
                         onClick={(e) => handleDeleteNote(note.id, e)}
                         title="Delete Note"
-                        className="opacity-0 group-hover:opacity-100 p-1 text-nimbus-400 hover:text-rose-600 transition-all rounded"
+                        className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 p-1 text-nimbus-400 hover:text-rose-600 transition-all rounded cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

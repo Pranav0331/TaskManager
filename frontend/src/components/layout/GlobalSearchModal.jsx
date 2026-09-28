@@ -174,7 +174,7 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 pb-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-20 px-2.5 sm:px-4 pb-4">
           {/* Backdrop overlay */}
           <motion.div
             initial={{ opacity: 0 }}

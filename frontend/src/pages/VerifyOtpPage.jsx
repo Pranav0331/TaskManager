@@ -211,7 +211,7 @@ const VerifyOtpPage = () => {
       </div>
 
       {/* Right form container */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white dark:bg-nimbus-950">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-white dark:bg-nimbus-950">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -233,7 +233,7 @@ const VerifyOtpPage = () => {
             </h2>
             <p className="text-nimbus-600 dark:text-nimbus-400 text-sm leading-relaxed">
               We've sent a 4-digit verification code to{' '}
-              <strong className="text-nimbus-900 dark:text-white font-semibold">{email}</strong>.
+              <strong className="text-nimbus-900 dark:text-white font-semibold break-all">{email}</strong>.
             </p>
           </div>
 
@@ -254,7 +254,7 @@ const VerifyOtpPage = () => {
               <label className="block text-xs font-semibold text-nimbus-600 dark:text-nimbus-400 uppercase tracking-wider mb-3">
                 4-Digit Verification Code
               </label>
-              <div className="flex items-center justify-between gap-3" onPaste={handlePaste}>
+              <div className="flex items-center justify-center gap-2.5 sm:gap-3" onPaste={handlePaste}>
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -266,7 +266,7 @@ const VerifyOtpPage = () => {
                     value={digit}
                     onChange={(e) => handleInputChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-16 h-16 text-center text-2xl font-bold font-mono bg-white dark:bg-nimbus-900 border-2 border-nimbus-200 dark:border-nimbus-700 rounded-xl text-nimbus-900 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition-all duration-200"
+                    className="w-12 h-12 sm:w-16 sm:h-16 text-center text-xl sm:text-2xl font-bold font-mono bg-white dark:bg-nimbus-900 border-2 border-nimbus-200 dark:border-nimbus-700 rounded-xl text-nimbus-900 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition-all duration-200"
                   />
                 ))}
               </div>

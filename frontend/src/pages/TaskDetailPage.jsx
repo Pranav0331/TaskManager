@@ -219,10 +219,10 @@ const TaskDetailPage = () => {
         transition={{ delay: 0.1 }}
         className="nimbus-card"
       >
-        <div className="px-6 py-5 border-b border-nimbus-200 dark:border-nimbus-800 flex items-start justify-between gap-4">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-nimbus-200 dark:border-nimbus-800 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold text-nimbus-900 dark:text-white">{task.title}</h1>
-            <div className="flex flex-wrap items-center gap-2 mt-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-nimbus-900 dark:text-white break-words">{task.title}</h1>
+            <div className="flex flex-wrap items-center gap-2 mt-2.5 sm:mt-3">
               <Badge variant={STATUS_COLORS[task.status]}>{task.status}</Badge>
               <Badge variant={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
               {allSubtasksCompleted && (
@@ -237,7 +237,7 @@ const TaskDetailPage = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
             <Button variant="secondary" size="sm" onClick={() => setEditModal(true)}>
               <Pencil className="w-4 h-4" />
               Edit
@@ -249,7 +249,7 @@ const TaskDetailPage = () => {
           </div>
         </div>
 
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-6">
           {task.description ? (
             <div>
               <h3 className="text-sm font-semibold text-nimbus-500 uppercase tracking-wider mb-2">
@@ -293,13 +293,13 @@ const TaskDetailPage = () => {
         transition={{ delay: 0.15 }}
         className="nimbus-card"
       >
-        <div className="px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-nimbus-200 dark:border-nimbus-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">
               <ListTree className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-nimbus-900 dark:text-white">
+              <h2 className="text-sm sm:text-base font-semibold text-nimbus-900 dark:text-white">
                 Subtasks & Checklist
               </h2>
               <p className="text-xs text-nimbus-500">
@@ -310,7 +310,7 @@ const TaskDetailPage = () => {
             </div>
           </div>
 
-          <Button size="sm" onClick={handleOpenAddSubtask}>
+          <Button size="sm" onClick={handleOpenAddSubtask} className="self-start sm:self-auto">
             <Plus className="w-4 h-4 mr-1.5" />
             Add Subtask
           </Button>
@@ -318,7 +318,7 @@ const TaskDetailPage = () => {
 
         {/* Subtask Progress Bar */}
         {totalSubtasks > 0 && (
-          <div className="px-6 pt-4 pb-1">
+          <div className="px-4 sm:px-6 pt-4 pb-1">
             <div className="w-full h-2 rounded-full bg-nimbus-100 dark:bg-nimbus-800 overflow-hidden">
               <div
                 className={`h-full transition-all duration-300 ${
@@ -331,7 +331,7 @@ const TaskDetailPage = () => {
         )}
 
         {/* Subtask Items List */}
-        <div className="px-6 py-4 space-y-2.5">
+        <div className="px-4 sm:px-6 py-4 space-y-2.5">
           {totalSubtasks === 0 ? (
             <div className="text-center py-8 text-nimbus-400">
               <ListTree className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -539,18 +539,18 @@ const TaskDetailPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-nimbus-100 dark:border-nimbus-800">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-nimbus-100 dark:border-nimbus-800">
             <button
               type="button"
               onClick={() => setSubtaskModalOpen(false)}
-              className="nimbus-btn-secondary text-xs cursor-pointer"
+              className="nimbus-btn-secondary text-xs cursor-pointer w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={subtaskSaving}
-              className="nimbus-btn-primary text-xs cursor-pointer"
+              className="nimbus-btn-primary text-xs cursor-pointer w-full sm:w-auto"
             >
               {subtaskSaving ? 'Saving...' : editingSubtask ? 'Update Subtask' : 'Add Subtask'}
             </button>

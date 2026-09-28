@@ -221,25 +221,27 @@ const CalendarPage = () => {
       </motion.div>
 
       {/* Main Grid: Full Calendar on left, Selected Day tasks on right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
         {/* Calendar View (8 cols) */}
-        <div className="lg:col-span-8 nimbus-card p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-nimbus-100 dark:border-nimbus-800">
-            <h3 className="text-lg font-bold text-nimbus-900 dark:text-white">
+        <div className="lg:col-span-8 nimbus-card p-3.5 sm:p-6">
+          <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-nimbus-100 dark:border-nimbus-800">
+            <h3 className="text-base sm:text-lg font-bold text-nimbus-900 dark:text-white">
               {monthName}
             </h3>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300"
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300"
+                aria-label="Previous month"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300"
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300"
+                aria-label="Next month"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -247,11 +249,11 @@ const CalendarPage = () => {
           </div>
 
           {/* Weekday headers */}
-          <div className="grid grid-cols-7 gap-2 mt-4 text-center">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 mt-3 text-center">
             {WEEKDAYS.map((wd) => (
               <span
                 key={wd}
-                className="text-xs font-semibold text-nimbus-400 dark:text-nimbus-500 uppercase tracking-wider py-1 truncate"
+                className="text-[11px] sm:text-xs font-semibold text-nimbus-400 dark:text-nimbus-500 uppercase tracking-wider py-1 truncate"
               >
                 <span className="hidden sm:inline">{wd}</span>
                 <span className="sm:hidden">{wd.slice(0, 2)}</span>
@@ -260,7 +262,7 @@ const CalendarPage = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2 mt-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 mt-1 sm:mt-2">
             {calendarDays.map((item, idx) => {
               const dateObj = new Date(item.year, item.month, item.day);
               const isToday = isSameDay(dateObj, new Date());
@@ -273,7 +275,7 @@ const CalendarPage = () => {
                   key={idx}
                   type="button"
                   onClick={() => setSelectedDate(dateObj)}
-                  className={`min-h-[70px] sm:min-h-[86px] p-2 rounded-xl text-left flex flex-col justify-between transition-all duration-150 border ${
+                  className={`min-h-[50px] sm:min-h-[86px] p-1 sm:p-2 rounded-xl text-left flex flex-col justify-between transition-all duration-150 border ${
                     isSelected
                       ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/40 ring-1 ring-brand-500'
                       : isToday
@@ -283,9 +285,9 @@ const CalendarPage = () => {
                       : 'border-transparent text-nimbus-300 dark:text-nimbus-600 hover:bg-nimbus-50/40'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between w-full">
                     <span
-                      className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
+                      className={`text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
                         isSelected
                           ? 'bg-brand-600 text-white'
                           : isToday
@@ -299,13 +301,14 @@ const CalendarPage = () => {
                     </span>
 
                     {dayTasks.length > 0 && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300">
+                      <span className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.2 sm:py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300">
                         {dayTasks.length}
                       </span>
                     )}
                   </div>
 
-                  <div className="space-y-1 mt-1">
+                  {/* Desktop view: Task pills */}
+                  <div className="hidden sm:block space-y-1 mt-1 w-full">
                     {dayTasks.slice(0, 2).map((taskItem) => (
                       <div
                         key={taskItem._id}
@@ -325,6 +328,18 @@ const CalendarPage = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Mobile view: Dot indicators */}
+                  <div className="sm:hidden flex items-center justify-center gap-0.5 mt-auto pt-1">
+                    {dayTasks.slice(0, 3).map((taskItem, i) => (
+                      <span
+                        key={i}
+                        className={`w-1 h-1 rounded-full ${
+                          taskItem.isSubtask ? 'bg-amber-500' : 'bg-brand-600 dark:bg-brand-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </button>
               );
             })}
@@ -332,7 +347,7 @@ const CalendarPage = () => {
         </div>
 
         {/* Selected Date Tasks List (4 cols) */}
-        <div className="lg:col-span-4 nimbus-card p-6 flex flex-col justify-between">
+        <div className="lg:col-span-4 nimbus-card p-4 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 border-b border-nimbus-100 dark:border-nimbus-800">
               <div>
