@@ -117,7 +117,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
   });
 
   return (
-    <div className="nimbus-card p-5 flex flex-col justify-between h-full bg-white dark:bg-nimbus-900">
+    <div className="nimbus-card p-3.5 sm:p-5 flex flex-col justify-between h-full bg-white dark:bg-nimbus-900">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-nimbus-100 dark:border-nimbus-800/80">
@@ -125,7 +125,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
             <div className="p-1.5 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400">
               <CalendarIcon className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-semibold text-nimbus-900 dark:text-white">
+            <h3 className="text-xs sm:text-sm font-semibold text-nimbus-900 dark:text-white truncate">
               {monthName}
             </h3>
           </div>
@@ -135,7 +135,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
               type="button"
               onClick={handleGoToToday}
               title="Jump to Today"
-              className="px-2 py-1 text-xs font-medium text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-md transition-colors mr-1"
+              className="px-2 py-1 text-xs font-medium text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-md transition-colors mr-1 cursor-pointer"
             >
               Today
             </button>
@@ -143,7 +143,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
               type="button"
               onClick={handlePrevMonth}
               title="Previous Month"
-              className="p-1 rounded-md text-nimbus-500 hover:text-nimbus-800 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 dark:hover:text-nimbus-200 transition-colors"
+              className="p-1 rounded-md text-nimbus-500 hover:text-nimbus-800 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 dark:hover:text-nimbus-200 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -151,7 +151,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
               type="button"
               onClick={handleNextMonth}
               title="Next Month"
-              className="p-1 rounded-md text-nimbus-500 hover:text-nimbus-800 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 dark:hover:text-nimbus-200 transition-colors"
+              className="p-1 rounded-md text-nimbus-500 hover:text-nimbus-800 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 dark:hover:text-nimbus-200 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -163,7 +163,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
           {WEEKDAYS.map((wd) => (
             <span
               key={wd}
-              className="text-[11px] font-semibold text-nimbus-400 dark:text-nimbus-500 uppercase tracking-wider py-1"
+              className="text-[10px] sm:text-[11px] font-semibold text-nimbus-400 dark:text-nimbus-500 uppercase tracking-wider py-1"
             >
               {wd}
             </span>
@@ -188,7 +188,7 @@ const CompactCalendar = ({ tasks = [], selectedDate, onSelectDate }) => {
                 key={idx}
                 type="button"
                 onClick={() => onSelectDate(dateObj)}
-                className={`group relative flex flex-col items-center justify-center h-8 sm:h-9 rounded-lg text-xs font-medium transition-all duration-150 ${
+                className={`group relative flex flex-col items-center justify-center h-8 sm:h-9 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer active:scale-95 ${
                   isSelected
                     ? 'bg-brand-600 text-white shadow-sm font-semibold'
                     : isToday

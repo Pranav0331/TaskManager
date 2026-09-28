@@ -275,9 +275,9 @@ const CalendarPage = () => {
                   key={idx}
                   type="button"
                   onClick={() => setSelectedDate(dateObj)}
-                  className={`min-h-[50px] sm:min-h-[86px] p-1 sm:p-2 rounded-xl text-left flex flex-col justify-between transition-all duration-150 border ${
+                  className={`min-h-[50px] sm:min-h-[86px] p-1 sm:p-2 rounded-xl text-left flex flex-col justify-between transition-all duration-150 border cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/40 ring-1 ring-brand-500'
+                      ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/40 ring-1 ring-brand-500 shadow-xs'
                       : isToday
                       ? 'border-brand-300/80 bg-brand-50/20 dark:bg-brand-900/20'
                       : item.isCurrentMonth

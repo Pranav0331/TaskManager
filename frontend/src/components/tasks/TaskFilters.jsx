@@ -34,7 +34,7 @@ const TaskFilters = ({
             <select
               value={status}
               onChange={(e) => onStatusChange(e.target.value)}
-              className="nimbus-input text-xs sm:text-sm py-2 px-2.5 w-full cursor-pointer"
+              className="nimbus-input text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-2.5 w-full cursor-pointer"
               aria-label="Filter by Status"
             >
               <option value="">All Status</option>
@@ -49,7 +49,7 @@ const TaskFilters = ({
             <select
               value={priority}
               onChange={(e) => onPriorityChange(e.target.value)}
-              className="nimbus-input text-xs sm:text-sm py-2 px-2.5 w-full cursor-pointer"
+              className="nimbus-input text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-2.5 w-full cursor-pointer"
               aria-label="Filter by Priority"
             >
               <option value="">All Priority</option>
@@ -64,7 +64,7 @@ const TaskFilters = ({
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value)}
-              className="nimbus-input text-xs sm:text-sm py-2 px-2.5 w-full cursor-pointer"
+              className="nimbus-input text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-2.5 w-full cursor-pointer"
               aria-label="Sort by attribute"
             >
               <option value="dueDate">Due Date</option>
@@ -80,7 +80,7 @@ const TaskFilters = ({
             <select
               value={sortOrder}
               onChange={(e) => onSortOrderChange(e.target.value)}
-              className="nimbus-input text-xs sm:text-sm py-2 px-2.5 w-full cursor-pointer"
+              className="nimbus-input text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-2.5 w-full cursor-pointer"
               aria-label="Sort order direction"
             >
               <option value="asc">Ascending (↑)</option>

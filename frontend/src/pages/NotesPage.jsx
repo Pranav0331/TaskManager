@@ -374,11 +374,11 @@ const NotesPage = () => {
         </div>
 
         {/* Compact Color Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 pr-4 scrollbar-none">
           <button
             type="button"
             onClick={() => setSelectedColor('all')}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex-shrink-0 ${
               selectedColor === 'all'
                 ? 'bg-brand-600 text-white shadow-2xs font-semibold'
                 : 'bg-nimbus-100/80 dark:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-400 hover:bg-nimbus-200 dark:hover:bg-nimbus-700'
@@ -391,7 +391,7 @@ const NotesPage = () => {
               key={c.id}
               type="button"
               onClick={() => setSelectedColor(c.id)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex-shrink-0 ${
                 selectedColor === c.id
                   ? 'bg-nimbus-900 text-white dark:bg-white dark:text-nimbus-900 shadow-2xs font-semibold'
                   : 'bg-nimbus-100/80 dark:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-400 hover:bg-nimbus-200 dark:hover:bg-nimbus-700'

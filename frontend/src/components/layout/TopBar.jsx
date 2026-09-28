@@ -90,37 +90,37 @@ const TopBar = ({ onOpenSidebar }) => {
       <header className="sticky top-0 z-20 bg-white/85 dark:bg-nimbus-900/85 backdrop-blur-xl border-b border-nimbus-200 dark:border-nimbus-800">
         <div className="flex items-center justify-between h-16 px-3 sm:px-4 lg:px-8">
           {/* Mobile hamburger menu & branding */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenSidebar();
               }}
-              className="lg:hidden p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300 transition-colors cursor-pointer"
+              className="lg:hidden p-1.5 sm:p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-600 dark:text-nimbus-300 transition-colors cursor-pointer flex-shrink-0"
               aria-label="Open sidebar navigation"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="lg:hidden flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center shadow-xs">
+            <div className="lg:hidden flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center shadow-xs flex-shrink-0">
                 <CheckSquare className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold text-nimbus-900 dark:text-white tracking-tight text-sm sm:text-base">
+              <span className="font-bold text-nimbus-900 dark:text-white tracking-tight text-xs sm:text-base truncate">
                 TaskFlow
               </span>
             </div>
           </div>
 
           {/* Right Action Icons (Search, Notifications, Theme, Profile) */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
               title="Search workspace (⌘K / Ctrl+K)"
               aria-label="Search"
-              className="p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-nimbus-100 dark:hover:bg-nimbus-800 text-nimbus-500 hover:text-nimbus-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               <Search className="w-5 h-5" />
             </button>

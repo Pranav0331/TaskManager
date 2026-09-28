@@ -215,7 +215,7 @@ const TaskForm = ({ initialData, onSubmit, onCancel, loading }) => {
             No subtasks added yet. Click &quot;+ Add Subtask&quot; to break this task down into smaller steps.
           </p>
         ) : (
-          <div className="space-y-3 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-none sm:max-h-80 overflow-y-visible sm:overflow-y-auto pr-0 sm:pr-1">
             {form.subtasks.map((subtask, index) => (
               <div
                 key={subtask.id || index}

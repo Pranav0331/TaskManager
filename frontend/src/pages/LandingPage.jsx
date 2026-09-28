@@ -227,7 +227,7 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-6xl lg:text-6xl font-extrabold tracking-tight text-nimbus-900 dark:text-white leading-[1.12]"
+            className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-nimbus-900 dark:text-white leading-[1.15]"
           >
             Manage tasks with <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 dark:from-brand-400 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent">

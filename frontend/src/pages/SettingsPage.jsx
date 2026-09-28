@@ -246,9 +246,9 @@ const SettingsPage = () => {
 
             <div className="space-y-3">
               {/* Task Creation */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <PlusCircle className="w-4 h-4 text-sky-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <PlusCircle className="w-4 h-4 text-sky-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Task Created
@@ -263,14 +263,14 @@ const SettingsPage = () => {
                   checked={preferences.created !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('created', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
 
               {/* Task Updates */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <Edit3 className="w-4 h-4 text-blue-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <Edit3 className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Task Updates
@@ -285,14 +285,14 @@ const SettingsPage = () => {
                   checked={preferences.updated !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('updated', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
 
               {/* Completed Tasks */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <CheckCheck className="w-4 h-4 text-emerald-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <CheckCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Completed Tasks
@@ -307,14 +307,14 @@ const SettingsPage = () => {
                   checked={preferences.completed !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('completed', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
 
               {/* Assignments */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <UserCheck className="w-4 h-4 text-indigo-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <UserCheck className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Task Assignments
@@ -329,14 +329,14 @@ const SettingsPage = () => {
                   checked={preferences.assignments !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('assignments', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
 
               {/* Due Dates */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-brand-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <Calendar className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Due Date Alerts
@@ -351,14 +351,14 @@ const SettingsPage = () => {
                   checked={preferences.dueDates !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('dueDates', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
 
               {/* Reminders */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-4 h-4 text-amber-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Task Reminders
@@ -373,14 +373,14 @@ const SettingsPage = () => {
                   checked={preferences.reminders !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('reminders', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
 
               {/* Overdue Tasks */}
-              <div className="flex items-center justify-between py-1.5">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-4 h-4 text-rose-500" />
+              <label className="flex items-center justify-between py-1.5 cursor-pointer select-none">
+                <div className="flex items-center gap-3 pr-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-nimbus-800 dark:text-nimbus-200">
                       Overdue Warnings
@@ -395,9 +395,9 @@ const SettingsPage = () => {
                   checked={preferences.overdue !== false}
                   disabled={!isSubscribed && activeSubscriptionsCount === 0}
                   onChange={(e) => updatePreference('overdue', e.target.checked)}
-                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer"
+                  className="w-4 h-4 text-brand-600 rounded border-nimbus-300 focus:ring-brand-500 dark:bg-nimbus-800 disabled:opacity-50 cursor-pointer flex-shrink-0"
                 />
-              </div>
+              </label>
             </div>
           </div>
 
@@ -445,19 +445,19 @@ const SettingsPage = () => {
               {devices.map((device) => (
                 <div
                   key={device.id}
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/50 border border-nimbus-200/70 dark:border-nimbus-800"
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-nimbus-50 dark:bg-nimbus-800/50 border border-nimbus-200/70 dark:border-nimbus-800 gap-2"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-2.5 rounded-lg bg-white dark:bg-nimbus-900 border border-nimbus-200 dark:border-nimbus-700 shadow-2xs">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-nimbus-900 border border-nimbus-200 dark:border-nimbus-700 shadow-2xs flex-shrink-0">
                       {getDeviceIcon(device.deviceType, device.os)}
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <p className="text-sm font-semibold text-nimbus-900 dark:text-white truncate">
                           {device.deviceName}
                         </p>
                         {device.isCurrentDevice && (
-                          <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
                             This Device
                           </span>
                         )}
@@ -466,7 +466,7 @@ const SettingsPage = () => {
                           Active
                         </span>
                       </div>
-                      <p className="text-xs text-nimbus-500 mt-0.5">
+                      <p className="text-xs text-nimbus-500 mt-0.5 truncate">
                         Last Active: {formatDateTime(device.lastActiveAt)}
                       </p>
                     </div>

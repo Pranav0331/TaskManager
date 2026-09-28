@@ -412,22 +412,24 @@ const TaskDetailPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                       <button
                         type="button"
                         onClick={() => handleOpenEditSubtask(subtask)}
-                        className="p-1.5 rounded-lg text-nimbus-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 transition-colors cursor-pointer"
+                        className="p-2 rounded-lg text-nimbus-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-nimbus-100 dark:hover:bg-nimbus-800 transition-colors cursor-pointer"
                         title="Edit subtask"
+                        aria-label="Edit subtask"
                       >
-                        <Edit2 className="w-3.5 h-3.5" />
+                        <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteSubtask(subtaskId)}
-                        className="p-1.5 rounded-lg text-nimbus-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                        className="p-2 rounded-lg text-nimbus-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                         title="Delete subtask"
+                        aria-label="Delete subtask"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
