@@ -1,6 +1,16 @@
 import api from './api';
 
 const STORAGE_KEY = 'taskflow_notes';
+let notesCache = null;
+let notesCacheTime = 0;
+let notesInFlight = null;
+const NOTES_CACHE_TTL_MS = 60000; // 60 seconds
+
+export const invalidateNotesCache = () => {
+  notesCache = null;
+  notesCacheTime = 0;
+  notesInFlight = null;
+};
 
 const getInitialNotes = () => [
   {
@@ -51,30 +61,53 @@ const normalizeNote = (n) => {
 };
 
 export const noteService = {
-  getNotes: async () => {
-    try {
-      const response = await api.get('/notes');
-      if (response.data?.success && Array.isArray(response.data?.data)) {
-        const normalized = response.data.data.map(normalizeNote);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-        return normalized;
-      }
-    } catch (e) {
-      // Graceful fallback to localStorage
+  getNotes: async (forceRefresh = false) => {
+    const now = Date.now();
+    if (!forceRefresh && notesCache && now - notesCacheTime < NOTES_CACHE_TTL_MS) {
+      return notesCache;
     }
 
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) {
-        const initial = getInitialNotes();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-        return initial;
-      }
-      return JSON.parse(stored).map(normalizeNote);
-    } catch (e) {
-      console.error('Failed to load notes from localStorage', e);
-      return getInitialNotes();
+    if (!forceRefresh && notesInFlight) {
+      return notesInFlight;
     }
+
+    const fetchPromise = (async () => {
+      try {
+        const response = await api.get('/notes');
+        if (response.data?.success && Array.isArray(response.data?.data)) {
+          const normalized = response.data.data.map(normalizeNote);
+          notesCache = normalized;
+          notesCacheTime = Date.now();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+          return normalized;
+        }
+      } catch (e) {
+        // Graceful fallback to localStorage
+      } finally {
+        notesInFlight = null;
+      }
+
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          const initial = getInitialNotes();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+          notesCache = initial;
+          notesCacheTime = Date.now();
+          return initial;
+        }
+        const parsed = JSON.parse(stored).map(normalizeNote);
+        notesCache = parsed;
+        notesCacheTime = Date.now();
+        return parsed;
+      } catch (e) {
+        console.error('Failed to load notes from localStorage', e);
+        return getInitialNotes();
+      }
+    })();
+
+    notesInFlight = fetchPromise;
+    return fetchPromise;
   },
 
   getLocalNotes: () => {
@@ -115,6 +148,7 @@ export const noteService = {
         const newNote = normalizeNote(response.data.data);
         const current = noteService.getLocalNotes();
         localStorage.setItem(STORAGE_KEY, JSON.stringify([newNote, ...current]));
+        invalidateNotesCache();
         return newNote;
       }
     } catch (e) {
@@ -132,6 +166,7 @@ export const noteService = {
     };
     const updated = [newNote, ...current];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    invalidateNotesCache();
     return newNote;
   },
 
@@ -160,6 +195,7 @@ export const noteService = {
           current[index] = updatedNote;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
         }
+        invalidateNotesCache();
         return updatedNote;
       }
     } catch (e) {
@@ -177,6 +213,7 @@ export const noteService = {
       updatedAt: new Date().toISOString(),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    invalidateNotesCache();
     return current[index];
   },
 
@@ -194,6 +231,7 @@ export const noteService = {
           current[index] = updatedNote;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
         }
+        invalidateNotesCache();
         return updatedNote;
       }
     } catch (e) {
@@ -209,6 +247,7 @@ export const noteService = {
       updatedAt: new Date().toISOString(),
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    invalidateNotesCache();
     return current[index];
   },
 
@@ -223,7 +262,7 @@ export const noteService = {
     // 2. Local update
     const current = noteService.getLocalNotes();
     const updated = current.filter((n) => (n.id || n._id) !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    invalidateNotesCache();
     return true;
   },
 };

@@ -25,8 +25,13 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAllRead }) => {
     const loadNotifications = async () => {
       setLoading(true);
       try {
-        const response = await taskService.getTasks({ sortBy: 'updatedAt', order: 'desc' });
-        const items = generateNotificationsFromTasks(response.data || []);
+        const cached = taskService.getCachedTasks?.();
+        let tasks = cached;
+        if (!tasks) {
+          const response = await taskService.getTasks({ sortBy: 'dueDate', order: 'asc' });
+          tasks = response.data || [];
+        }
+        const items = generateNotificationsFromTasks(tasks);
         setNotifications(items);
 
         // Immediately mark visible notifications as read

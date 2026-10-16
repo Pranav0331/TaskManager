@@ -164,25 +164,42 @@ export const getTaskStats = async (req, res) => {
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [
-      total,
-      completed,
-      pending,
-      inProgress,
-      overdue,
-      weeklyCompleted,
-      todayDue,
-      todayCompleted,
-    ] = await Promise.all([
-      Task.countDocuments(filter),
-      Task.countDocuments({ ...filter, status: 'Completed' }),
-      Task.countDocuments({ ...filter, status: 'Pending' }),
-      Task.countDocuments({ ...filter, status: 'In Progress' }),
-      Task.countDocuments({ ...filter, dueDate: { $lt: now }, status: { $ne: 'Completed' } }),
-      Task.countDocuments({ ...filter, status: 'Completed', updatedAt: { $gte: sevenDaysAgo } }),
-      Task.countDocuments({ ...filter, dueDate: { $gte: startOfToday, $lte: endOfToday } }),
-      Task.countDocuments({ ...filter, status: 'Completed', updatedAt: { $gte: startOfToday } }),
+    const [facetRaw] = await Task.aggregate([
+      { $match: filter },
+      {
+        $facet: {
+          total: [{ $count: 'count' }],
+          completed: [{ $match: { status: 'Completed' } }, { $count: 'count' }],
+          pending: [{ $match: { status: 'Pending' } }, { $count: 'count' }],
+          inProgress: [{ $match: { status: 'In Progress' } }, { $count: 'count' }],
+          overdue: [
+            { $match: { dueDate: { $lt: now }, status: { $ne: 'Completed' } } },
+            { $count: 'count' },
+          ],
+          weeklyCompleted: [
+            { $match: { status: 'Completed', updatedAt: { $gte: sevenDaysAgo } } },
+            { $count: 'count' },
+          ],
+          todayDue: [
+            { $match: { dueDate: { $gte: startOfToday, $lte: endOfToday } } },
+            { $count: 'count' },
+          ],
+          todayCompleted: [
+            { $match: { status: 'Completed', updatedAt: { $gte: startOfToday } } },
+            { $count: 'count' },
+          ],
+        },
+      },
     ]);
+
+    const total = facetRaw?.total[0]?.count || 0;
+    const completed = facetRaw?.completed[0]?.count || 0;
+    const pending = facetRaw?.pending[0]?.count || 0;
+    const inProgress = facetRaw?.inProgress[0]?.count || 0;
+    const overdue = facetRaw?.overdue[0]?.count || 0;
+    const weeklyCompleted = facetRaw?.weeklyCompleted[0]?.count || 0;
+    const todayDue = facetRaw?.todayDue[0]?.count || 0;
+    const todayCompleted = facetRaw?.todayCompleted[0]?.count || 0;
 
     const completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
     const todayTotal = todayDue + todayCompleted;

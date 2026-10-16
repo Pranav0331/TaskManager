@@ -3,7 +3,8 @@ import api from './api';
 // Lightweight in-memory request deduplication & cache
 const cache = new Map();
 const inFlight = new Map();
-const CACHE_TTL_MS = 15000; // 15 seconds
+const CACHE_TTL_MS = 60000; // 60 seconds
+let lastLoadedTasks = null;
 
 const getCacheKey = (url, params = {}) => {
   return `${url}?${JSON.stringify(params)}`;
@@ -27,6 +28,17 @@ const cachedGet = async (url, params = {}, ttl = CACHE_TTL_MS) => {
     try {
       const response = await api.get(url, { params });
       cache.set(key, { data: response.data, timestamp: Date.now() });
+
+      // Track last loaded tasks array and notify listeners to avoid duplicate requests
+      if (url === '/tasks' && Array.isArray(response.data?.data)) {
+        lastLoadedTasks = response.data.data;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('taskflow_tasks_updated', { detail: lastLoadedTasks })
+          );
+        }
+      }
+
       return response.data;
     } finally {
       inFlight.delete(key);
@@ -191,4 +203,5 @@ export const taskService = {
   },
 
   invalidateCache: invalidateTaskCache,
+  getCachedTasks: () => lastLoadedTasks,
 };

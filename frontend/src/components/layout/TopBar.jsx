@@ -31,17 +31,24 @@ const TopBar = ({ onOpenSidebar }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const checkUnreadNotifications = useCallback(async () => {
+  const updateUnreadFromTasks = useCallback((tasks) => {
+    if (!Array.isArray(tasks)) return;
+    const items = generateNotificationsFromTasks(tasks);
+    const readIds = getReadNotificationIds();
+    const unread = items.filter((item) => !readIds.includes(item.id)).length;
+    setUnreadCount(unread);
+  }, []);
+
+  const checkUnreadNotifications = useCallback(() => {
     try {
-      const response = await taskService.getTasks({ sortBy: 'updatedAt', order: 'desc' });
-      const items = generateNotificationsFromTasks(response.data || []);
-      const readIds = getReadNotificationIds();
-      const unread = items.filter((item) => !readIds.includes(item.id)).length;
-      setUnreadCount(unread);
+      const cached = taskService.getCachedTasks?.();
+      if (cached) {
+        updateUnreadFromTasks(cached);
+      }
     } catch {
       // Graceful fallback
     }
-  }, []);
+  }, [updateUnreadFromTasks]);
 
   useEffect(() => {
     checkUnreadNotifications();
@@ -50,22 +57,24 @@ const TopBar = ({ onOpenSidebar }) => {
       setUnreadCount(0);
     };
 
-    const handleTaskflowUpdated = () => {
-      checkUnreadNotifications();
+    const handleTasksUpdated = (e) => {
+      if (e.detail) {
+        updateUnreadFromTasks(e.detail);
+      } else {
+        checkUnreadNotifications();
+      }
     };
 
     window.addEventListener('taskflow_notifications_read', handleNotificationsRead);
-    window.addEventListener('taskflow_notifications_updated', handleTaskflowUpdated);
-
-    // Periodic check every 60s
-    const interval = setInterval(checkUnreadNotifications, 60000);
+    window.addEventListener('taskflow_tasks_updated', handleTasksUpdated);
+    window.addEventListener('taskflow_notifications_updated', checkUnreadNotifications);
 
     return () => {
       window.removeEventListener('taskflow_notifications_read', handleNotificationsRead);
-      window.removeEventListener('taskflow_notifications_updated', handleTaskflowUpdated);
-      clearInterval(interval);
+      window.removeEventListener('taskflow_tasks_updated', handleTasksUpdated);
+      window.removeEventListener('taskflow_notifications_updated', checkUnreadNotifications);
     };
-  }, [checkUnreadNotifications]);
+  }, [checkUnreadNotifications, updateUnreadFromTasks]);
 
   // Global keyboard shortcut for Cmd+K (Mac) / Ctrl+K (Windows/Linux)
   useEffect(() => {
