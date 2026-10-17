@@ -6,10 +6,59 @@ let notesCacheTime = 0;
 let notesInFlight = null;
 const NOTES_CACHE_TTL_MS = 60000; // 60 seconds
 
+const SESSION_CACHE_PREFIX = 'taskflow_session_';
+
+const getCurrentUserId = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return 'anon';
+    const parsed = JSON.parse(userStr);
+    return parsed?._id || parsed?.id || 'anon';
+  } catch {
+    return 'anon';
+  }
+};
+
+const readSessionCache = (subKey) => {
+  try {
+    if (typeof sessionStorage === 'undefined') return null;
+    const userId = getCurrentUserId();
+    if (userId === 'anon') return null;
+    const raw = sessionStorage.getItem(`${SESSION_CACHE_PREFIX}${userId}_${subKey}`);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (!entry || typeof entry !== 'object' || !entry.timestamp) return null;
+    if (Date.now() - entry.timestamp > 5 * 60 * 1000) return null;
+    return entry.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeSessionCache = (subKey, data) => {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    const userId = getCurrentUserId();
+    if (userId === 'anon') return;
+    sessionStorage.setItem(
+      `${SESSION_CACHE_PREFIX}${userId}_${subKey}`,
+      JSON.stringify({ data, timestamp: Date.now() })
+    );
+  } catch {}
+};
+
 export const invalidateNotesCache = () => {
   notesCache = null;
   notesCacheTime = 0;
   notesInFlight = null;
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const userId = getCurrentUserId();
+      if (userId !== 'anon') {
+        sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${userId}_notes`);
+      }
+    }
+  } catch {}
 };
 
 const getInitialNotes = () => [
@@ -78,6 +127,7 @@ export const noteService = {
           const normalized = response.data.data.map(normalizeNote);
           notesCache = normalized;
           notesCacheTime = Date.now();
+          writeSessionCache('notes', normalized);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
           return normalized;
         }
@@ -264,5 +314,29 @@ export const noteService = {
     const updated = current.filter((n) => (n.id || n._id) !== id);
     invalidateNotesCache();
     return true;
+  },
+
+  getCachedNotes: () => {
+    if (Array.isArray(notesCache) && notesCache.length > 0) return notesCache;
+    const sessionNotes = readSessionCache('notes');
+    if (Array.isArray(sessionNotes) && sessionNotes.length > 0) {
+      notesCache = sessionNotes;
+      return sessionNotes;
+    }
+    return noteService.getLocalNotes();
+  },
+
+  clearUserCache: () => {
+    notesCache = null;
+    notesCacheTime = 0;
+    notesInFlight = null;
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const userId = getCurrentUserId();
+        if (userId !== 'anon') {
+          sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${userId}_notes`);
+        }
+      }
+    } catch {}
   },
 };

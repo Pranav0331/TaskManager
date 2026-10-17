@@ -13,8 +13,8 @@ import EmptyState from '../components/ui/EmptyState';
 import { TableRowSkeleton } from '../components/ui/Skeleton';
 
 const TasksPage = () => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState(() => taskService.getCachedTasks?.() || []);
+  const [loading, setLoading] = useState(() => !taskService.getCachedTasks?.()?.length);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
@@ -28,7 +28,10 @@ const TasksPage = () => {
   const debouncedSearch = useDebounce(search);
 
   const fetchTasks = useCallback(async () => {
-    setLoading(true);
+    const hasFilter = Boolean(debouncedSearch || status || priority || sortBy !== 'dueDate' || sortOrder !== 'asc');
+    if (hasFilter || !taskService.getCachedTasks?.()?.length) {
+      setLoading(true);
+    }
     try {
       const params = { sortBy, order: sortOrder };
       if (debouncedSearch) params.search = debouncedSearch;

@@ -5,6 +5,63 @@ const cache = new Map();
 const inFlight = new Map();
 const CACHE_TTL_MS = 60000; // 60 seconds
 let lastLoadedTasks = null;
+let lastLoadedStats = null;
+
+const SESSION_CACHE_PREFIX = 'taskflow_session_';
+
+const getCurrentUserId = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return 'anon';
+    const parsed = JSON.parse(userStr);
+    return parsed?._id || parsed?.id || 'anon';
+  } catch {
+    return 'anon';
+  }
+};
+
+const readSessionCache = (subKey) => {
+  try {
+    if (typeof sessionStorage === 'undefined') return null;
+    const userId = getCurrentUserId();
+    if (userId === 'anon') return null;
+    const raw = sessionStorage.getItem(`${SESSION_CACHE_PREFIX}${userId}_${subKey}`);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (!entry || typeof entry !== 'object' || !entry.timestamp) return null;
+    // Expire session cache entries after 5 minutes
+    if (Date.now() - entry.timestamp > 5 * 60 * 1000) return null;
+    return entry.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeSessionCache = (subKey, data) => {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    const userId = getCurrentUserId();
+    if (userId === 'anon') return;
+    sessionStorage.setItem(
+      `${SESSION_CACHE_PREFIX}${userId}_${subKey}`,
+      JSON.stringify({ data, timestamp: Date.now() })
+    );
+  } catch {}
+};
+
+const clearSessionCache = () => {
+  try {
+    if (typeof sessionStorage === 'undefined') return;
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith(SESSION_CACHE_PREFIX)) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+  } catch {}
+};
 
 const getCacheKey = (url, params = {}) => {
   return `${url}?${JSON.stringify(params)}`;
@@ -29,14 +86,21 @@ const cachedGet = async (url, params = {}, ttl = CACHE_TTL_MS) => {
       const response = await api.get(url, { params });
       cache.set(key, { data: response.data, timestamp: Date.now() });
 
-      // Track last loaded tasks array and notify listeners to avoid duplicate requests
+      // Track last loaded tasks array and persist to session storage
       if (url === '/tasks' && Array.isArray(response.data?.data)) {
         lastLoadedTasks = response.data.data;
+        writeSessionCache('tasks', lastLoadedTasks);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('taskflow_tasks_updated', { detail: lastLoadedTasks })
           );
         }
+      }
+
+      // Track last loaded stats and persist to session storage
+      if (url === '/tasks/stats' && response.data?.data) {
+        lastLoadedStats = response.data.data;
+        writeSessionCache('stats', lastLoadedStats);
       }
 
       return response.data;
@@ -52,6 +116,16 @@ const cachedGet = async (url, params = {}, ttl = CACHE_TTL_MS) => {
 const invalidateTaskCache = () => {
   cache.clear();
   inFlight.clear();
+  // Invalidate persisted session tasks/stats on mutations
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const userId = getCurrentUserId();
+      if (userId !== 'anon') {
+        sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${userId}_tasks`);
+        sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${userId}_stats`);
+      }
+    }
+  } catch {}
 };
 
 export const authService = {
@@ -203,5 +277,34 @@ export const taskService = {
   },
 
   invalidateCache: invalidateTaskCache,
-  getCachedTasks: () => lastLoadedTasks,
+  clearUserCache: () => {
+    cache.clear();
+    inFlight.clear();
+    lastLoadedTasks = null;
+    lastLoadedStats = null;
+    clearSessionCache();
+  },
+  getCachedTasks: () => {
+    if (Array.isArray(lastLoadedTasks)) return lastLoadedTasks;
+    const sessionTasks = readSessionCache('tasks');
+    if (Array.isArray(sessionTasks)) {
+      lastLoadedTasks = sessionTasks;
+      return sessionTasks;
+    }
+    return null;
+  },
+  getCachedStats: () => {
+    if (lastLoadedStats) return lastLoadedStats;
+    const sessionStats = readSessionCache('stats');
+    if (sessionStats && typeof sessionStats === 'object') {
+      lastLoadedStats = sessionStats;
+      return sessionStats;
+    }
+    return null;
+  },
+  hasCachedDashboardData: () => {
+    const tasks = taskService.getCachedTasks();
+    const stats = taskService.getCachedStats();
+    return Boolean(Array.isArray(tasks) && stats);
+  },
 };

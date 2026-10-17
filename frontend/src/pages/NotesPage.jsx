@@ -62,8 +62,8 @@ const COLOR_OPTIONS = [
 ];
 
 const NotesPage = () => {
-  const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [notes, setNotes] = useState(() => noteService.getCachedNotes?.() || []);
+  const [loading, setLoading] = useState(() => !noteService.getCachedNotes?.()?.length);
   const [search, setSearch] = useState('');
   const [selectedColor, setSelectedColor] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
@@ -76,7 +76,7 @@ const NotesPage = () => {
   const searchInputRef = useRef(null);
 
   const loadNotes = useCallback(async (isInitial = false) => {
-    if (isInitial) {
+    if (isInitial && !noteService.getCachedNotes?.()?.length) {
       setLoading(true);
     }
     try {

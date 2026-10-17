@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService } from '../services/taskService';
+import { authService, taskService } from '../services/taskService';
+import { noteService } from '../services/noteService';
 
 const AuthContext = createContext(null);
 
@@ -21,10 +22,14 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    taskService.clearUserCache?.();
+    noteService.clearUserCache?.();
     setUser(null);
   }, []);
 
   const login = useCallback((userData, token) => {
+    taskService.clearUserCache?.();
+    noteService.clearUserCache?.();
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);

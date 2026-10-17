@@ -22,8 +22,8 @@ import { STATUS_COLORS, PRIORITY_COLORS, formatDate } from '../utils/constants';
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const CalendarPage = () => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState(() => taskService.getCachedTasks?.() || []);
+  const [loading, setLoading] = useState(() => !taskService.getCachedTasks?.()?.length);
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = new Date();
@@ -33,7 +33,9 @@ const CalendarPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchTasks = useCallback(async () => {
-    setLoading(true);
+    if (!taskService.getCachedTasks?.()?.length) {
+      setLoading(true);
+    }
     try {
       const response = await taskService.getTasks({ sortBy: 'dueDate', order: 'asc' });
       setTasks(response.data || []);

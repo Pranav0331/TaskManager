@@ -27,15 +27,22 @@ import QuickNotesCard from '../components/dashboard/QuickNotesCard';
 
 const DashboardPage = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [allTasks, setAllTasks] = useState([]);
-  const [upcomingTasks, setUpcomingTasks] = useState([]);
+  const [stats, setStats] = useState(() => taskService.getCachedStats?.() || null);
+  const [allTasks, setAllTasks] = useState(() => taskService.getCachedTasks?.() || []);
+  const [upcomingTasks, setUpcomingTasks] = useState(() => {
+    const cached = taskService.getCachedTasks?.() || [];
+    return cached.filter((t) => t.status !== 'Completed' && t.dueDate).slice(0, 5);
+  });
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !taskService.hasCachedDashboardData?.());
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
+    // Only show skeleton if there is no cached data already on screen
+    if (!taskService.hasCachedDashboardData?.()) {
+      setLoading(true);
+    }
     try {
       const [statsRes, allTasksRes] = await Promise.all([
         taskService.getStats(),
@@ -53,7 +60,9 @@ const DashboardPage = () => {
       setUpcomingTasks(upcoming);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
-      toast.error('Failed to load dashboard data');
+      if (!taskService.hasCachedDashboardData?.()) {
+        toast.error('Failed to load dashboard data');
+      }
     } finally {
       setLoading(false);
     }

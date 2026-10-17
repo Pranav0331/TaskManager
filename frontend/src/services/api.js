@@ -23,6 +23,7 @@ const getBaseUrl = () => {
 
 const api = axios.create({
   baseURL: getBaseUrl(),
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,13 +41,28 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle auth errors globally
+// Handle auth errors & timeouts globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      error.message = 'Request timed out. Please check your connection and try again.';
+    }
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          const keys = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const k = sessionStorage.key(i);
+            if (k && k.startsWith('taskflow_session_')) keys.push(k);
+          }
+          keys.forEach((k) => sessionStorage.removeItem(k));
+        }
+      } catch {}
+
       const publicPaths = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password'];
       const isPublicPath = publicPaths.some((path) => window.location.pathname.startsWith(path));
       if (!isPublicPath && window.location.pathname !== '/') {
