@@ -204,8 +204,9 @@ export const taskService = {
     return await cachedGet('/tasks', params);
   },
 
-  getStats: async () => {
-    return await cachedGet('/tasks/stats');
+  getStats: async (params = {}) => {
+    const tzOffset = new Date().getTimezoneOffset();
+    return await cachedGet('/tasks/stats', { tzOffset, ...params });
   },
 
   getTask: async (id) => {

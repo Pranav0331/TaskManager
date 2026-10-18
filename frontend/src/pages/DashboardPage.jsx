@@ -20,7 +20,7 @@ import TaskForm from '../components/tasks/TaskForm';
 import Modal from '../components/ui/Modal';
 import { StatCardSkeleton } from '../components/ui/Skeleton';
 import Badge from '../components/ui/Badge';
-import { STATUS_COLORS, PRIORITY_COLORS, formatDate, isOverdue } from '../utils/constants';
+import { STATUS_COLORS, PRIORITY_COLORS, formatDate, isOverdue, getEndOfDueDay } from '../utils/constants';
 import { useAuth } from '../context/AuthContext';
 import CompactCalendar from '../components/dashboard/CompactCalendar';
 import QuickNotesCard from '../components/dashboard/QuickNotesCard';
@@ -141,8 +141,8 @@ const DashboardPage = () => {
       return allTasks.filter((t) => {
         if (t.status === 'Completed') return false;
         if (t.dueDate) {
-          const due = new Date(t.dueDate);
-          return due <= endOfDay;
+          const endOfDue = getEndOfDueDay(t.dueDate);
+          return endOfDue && endOfDue <= endOfDay;
         }
         return t.priority === 'High';
       });
@@ -151,8 +151,8 @@ const DashboardPage = () => {
     // Specific date picked
     return allTasks.filter((t) => {
       if (!t.dueDate) return false;
-      const due = new Date(t.dueDate);
-      return due >= startOfDay && due <= endOfDay;
+      const endOfDue = getEndOfDueDay(t.dueDate);
+      return endOfDue && endOfDue >= startOfDay && endOfDue <= endOfDay;
     });
   }, [allTasks, selectedDate, isToday]);
 
@@ -172,32 +172,35 @@ const DashboardPage = () => {
       );
     }
 
-    const now = new Date();
-    const due = new Date(dueDate);
-    const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    if (due < now) {
+    if (isOverdue(dueDate, status)) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-400">
           <AlertTriangle className="w-3 h-3" /> Overdue
         </span>
       );
     }
-    if (diffHours <= 24) {
+
+    const endOfDue = getEndOfDueDay(dueDate);
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const endOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23, 59, 59, 999);
+
+    if (endOfDue >= startOfToday && endOfDue <= endOfToday) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400">
           <Clock className="w-3 h-3" /> Due Today
         </span>
       );
     }
-    if (diffHours <= 48) {
+    if (endOfDue > endOfToday && endOfDue <= endOfTomorrow) {
       return (
         <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
           Due Tomorrow
         </span>
       );
     }
-    const daysLeft = Math.ceil(diffHours / 24);
+    const daysLeft = Math.ceil((endOfDue.getTime() - endOfToday.getTime()) / (24 * 60 * 60 * 1000));
     return (
       <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-nimbus-100 text-nimbus-700 dark:bg-nimbus-800 dark:text-nimbus-300">
         In {daysLeft}d

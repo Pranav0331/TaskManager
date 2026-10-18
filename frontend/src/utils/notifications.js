@@ -1,5 +1,5 @@
 import { AlertTriangle, Clock, CheckCheck, Sparkles } from 'lucide-react';
-import { isOverdue, formatDate } from './constants';
+import { isOverdue, formatDate, getEndOfDueDay } from './constants';
 
 const READ_NOTIFICATIONS_KEY = 'taskflow_read_notifications';
 
@@ -61,8 +61,8 @@ export const generateNotificationsFromTasks = (tasks = []) => {
 
     // 2. Due today
     if (task.dueDate && task.status !== 'Completed') {
-      const due = new Date(task.dueDate);
-      if (due >= startOfToday && due <= endOfToday) {
+      const endOfDue = getEndOfDueDay(task.dueDate);
+      if (endOfDue && endOfDue >= startOfToday && endOfDue <= endOfToday) {
         items.push({
           id: `due-${task._id}`,
           taskId: task._id,
@@ -109,7 +109,7 @@ export const generateNotificationsFromTasks = (tasks = []) => {
     if (Array.isArray(task.subtasks) && task.subtasks.length > 0) {
       task.subtasks.forEach((subtask) => {
         if (subtask.status !== 'Completed' && subtask.dueDate) {
-          const subDue = new Date(subtask.dueDate);
+          const subEndOfDue = getEndOfDueDay(subtask.dueDate);
           if (isOverdue(subtask.dueDate, subtask.status)) {
             items.push({
               id: `overdue-subtask-${subtask._id || subtask.id}`,
@@ -122,7 +122,7 @@ export const generateNotificationsFromTasks = (tasks = []) => {
               color: 'rose',
               priority: 1,
             });
-          } else if (subDue >= startOfToday && subDue <= endOfToday) {
+          } else if (subEndOfDue && subEndOfDue >= startOfToday && subEndOfDue <= endOfToday) {
             items.push({
               id: `due-subtask-${subtask._id || subtask.id}`,
               taskId: task._id,

@@ -160,8 +160,22 @@ export const getTaskStats = async (req, res) => {
     };
 
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    // Parse client timezone offset in minutes (e.g. -330 for IST UTC+5:30)
+    const rawOffset = req.query.tzOffset;
+    const tzOffset = rawOffset !== undefined && !isNaN(Number(rawOffset))
+      ? Number(rawOffset)
+      : now.getTimezoneOffset();
+
+    // Convert current UTC time to user local time components
+    const localNowMs = now.getTime() - tzOffset * 60 * 1000;
+    const localNow = new Date(localNowMs);
+    const y = localNow.getUTCFullYear();
+    const m = localNow.getUTCMonth();
+    const d = localNow.getUTCDate();
+
+    // Start of today and end of today in user local timezone, represented in UTC
+    const startOfToday = new Date(Date.UTC(y, m, d) + tzOffset * 60 * 1000);
+    const endOfToday = new Date(Date.UTC(y, m, d, 23, 59, 59, 999) + tzOffset * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     const [facetRaw] = await Task.aggregate([
@@ -173,7 +187,7 @@ export const getTaskStats = async (req, res) => {
           pending: [{ $match: { status: 'Pending' } }, { $count: 'count' }],
           inProgress: [{ $match: { status: 'In Progress' } }, { $count: 'count' }],
           overdue: [
-            { $match: { dueDate: { $lt: now }, status: { $ne: 'Completed' } } },
+            { $match: { dueDate: { $lt: startOfToday }, status: { $ne: 'Completed' } } },
             { $count: 'count' },
           ],
           weeklyCompleted: [

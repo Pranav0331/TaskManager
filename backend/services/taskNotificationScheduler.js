@@ -36,10 +36,11 @@ export const checkTaskDeadlinesAndReminders = async () => {
       }
     }
 
-    // 2. Find overdue tasks (dueDate in past, not completed, overdue alert not sent recently)
+    // 2. Find overdue tasks (due date fully elapsed, not completed, overdue alert not sent recently)
+    const overdueCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const overdueTasks = await Task.find({
       status: { $ne: 'Completed' },
-      dueDate: { $lt: now },
+      dueDate: { $lte: overdueCutoff },
       $or: [
         { overdueSentAt: null },
         { overdueSentAt: { $lt: twentyFourHoursAgo } },
@@ -97,9 +98,10 @@ export const checkTaskDeadlinesAndReminders = async () => {
           subtaskNotificationsCount++;
         }
 
-        // Subtask overdue
+        // Subtask overdue (due date fully elapsed)
+        const isSubOverdue = (now.getTime() - subDue.getTime()) >= 24 * 60 * 60 * 1000;
         if (
-          subDue < now &&
+          isSubOverdue &&
           (!subtask.overdueSentAt || subtask.overdueSentAt < twentyFourHoursAgo)
         ) {
           await sendTaskNotification({

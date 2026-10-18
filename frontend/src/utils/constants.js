@@ -15,6 +15,18 @@ export const PRIORITY_COLORS = {
 
 export const formatDate = (date) => {
   if (!date) return '—';
+  if (typeof date === 'string') {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, y, m, d] = match;
+      const localDate = new Date(Number(y), Number(m) - 1, Number(d));
+      return localDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+  }
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -33,9 +45,46 @@ export const formatDateTime = (date) => {
   });
 };
 
+/**
+ * Returns a local Date representing 23:59:59.999 on the due date.
+ * Accurately parses ISO date strings (YYYY-MM-DD or full ISO) and Date instances
+ * according to the user's local calendar day.
+ */
+export const getEndOfDueDay = (dueDate) => {
+  if (!dueDate) return null;
+
+  if (typeof dueDate === 'string') {
+    const match = dueDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, year, month, day] = match;
+      return new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+    }
+  }
+
+  const dateObj = new Date(dueDate);
+  if (isNaN(dateObj.getTime())) return null;
+
+  return new Date(
+    dateObj.getFullYear(),
+    dateObj.getMonth(),
+    dateObj.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
+};
+
+/**
+ * Determines whether a task or subtask is overdue.
+ * A task is NOT overdue before its actual deadline.
+ * If a task's due date is today, it is marked overdue only after 11:59 PM local time (next day 12:00 AM).
+ */
 export const isOverdue = (dueDate, status) => {
   if (!dueDate || status === 'Completed') return false;
-  return new Date(dueDate) < new Date();
+  const endOfDay = getEndOfDueDay(dueDate);
+  if (!endOfDay) return false;
+  return new Date().getTime() > endOfDay.getTime();
 };
 
 export const getInitials = (name) => {
