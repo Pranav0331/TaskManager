@@ -33,7 +33,12 @@ const GoogleAuthButton = ({ mode = 'signin' }) => {
   const [loading, setLoading] = useState(false);
 
   const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
-  const isConfigured = Boolean(clientId && !clientId.includes('your_google_client_id'));
+  const isConfigured = Boolean(
+    clientId &&
+    !clientId.includes('your_google_client_id') &&
+    !clientId.includes('PASTE_YOUR_') &&
+    clientId.length > 15
+  );
 
   const handleSuccess = async (credentialResponse) => {
     if (!credentialResponse?.credential) {
