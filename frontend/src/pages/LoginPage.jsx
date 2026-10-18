@@ -5,6 +5,7 @@ import { CheckSquare, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import GoogleAuthButton from '../components/auth/GoogleAuthButton';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -74,7 +75,20 @@ const LoginPage = () => {
           </div>
 
           <h2 className="text-2xl font-bold text-nimbus-900 dark:text-white mb-2">Welcome back</h2>
-          <p className="text-nimbus-500 mb-8">Sign in to your account to continue</p>
+          <p className="text-nimbus-500 mb-6">Sign in to your account to continue</p>
+
+          <GoogleAuthButton mode="signin" />
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-nimbus-200 dark:border-nimbus-800" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-nimbus-950 px-3 text-nimbus-400 font-medium tracking-wider">
+                Or continue with email
+              </span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

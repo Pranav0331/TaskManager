@@ -5,6 +5,7 @@ import { CheckSquare, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import GoogleAuthButton from '../components/auth/GoogleAuthButton';
 
 const RegisterPage = () => {
   const { register } = useAuth();
@@ -87,7 +88,20 @@ const RegisterPage = () => {
           </div>
 
           <h2 className="text-2xl font-bold text-nimbus-900 dark:text-white mb-2">Create account</h2>
-          <p className="text-nimbus-500 mb-8">Get started with your free account</p>
+          <p className="text-nimbus-500 mb-6">Get started with your free account</p>
+
+          <GoogleAuthButton mode="signup" />
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-nimbus-200 dark:border-nimbus-800" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-nimbus-950 px-3 text-nimbus-400 font-medium tracking-wider">
+                Or register with email
+              </span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

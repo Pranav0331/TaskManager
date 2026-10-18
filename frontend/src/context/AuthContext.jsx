@@ -48,6 +48,15 @@ export const AuthProvider = ({ children }) => {
     return response;
   }, [login]);
 
+  const loginWithGoogle = useCallback(async (credential) => {
+    const response = await authService.googleLogin(credential);
+    if (response.success) {
+      const { token, ...userData } = response.data;
+      login(userData, token);
+    }
+    return response;
+  }, [login]);
+
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('token');
@@ -79,6 +88,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated: !!user,
         login: loginUser,
+        loginWithGoogle,
         register,
         logout,
       }}

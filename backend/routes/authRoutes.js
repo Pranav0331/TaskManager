@@ -5,6 +5,7 @@ import {
   verifyOtp,
   resendOtp,
   login,
+  googleAuth,
   getMe,
   forgotPassword,
   verifyResetToken,
@@ -59,6 +60,15 @@ router.post(
   ],
   validate,
   login
+);
+
+router.post(
+  '/google',
+  [
+    body('credential').notEmpty().withMessage('Google credential token is required'),
+  ],
+  validate,
+  googleAuth
 );
 
 router.post(

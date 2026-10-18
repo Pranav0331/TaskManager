@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import Otp from '../models/Otp.js';
 import generateToken from '../utils/generateToken.js';
@@ -510,3 +511,114 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Authenticate user via Google ID Token (GIS / OAuth 2.0)
+ * @route   POST /api/auth/google
+ * @access  Public
+ */
+export const googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google credential token is required',
+      });
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.status(500).json({
+        success: false,
+        message: 'Google Client ID is not configured on the server',
+      });
+    }
+
+    const client = new OAuth2Client(clientId);
+    let payload;
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyErr) {
+      console.error('Google token verification failed:', verifyErr.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired Google authentication token',
+      });
+    }
+
+    if (!payload || !payload.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google profile did not provide an email address',
+      });
+    }
+
+    if (!payload.email_verified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google email address is not verified',
+      });
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const googleId = payload.sub;
+    const name = payload.name?.trim() || payload.given_name?.trim() || email.split('@')[0];
+    const avatar = payload.picture || null;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Securely link Google account without duplicate creation
+      let modified = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        modified = true;
+      }
+      if (!user.avatar && avatar) {
+        user.avatar = avatar;
+        modified = true;
+      }
+      if (modified) {
+        await user.save();
+      }
+    } else {
+      // Create new user account with verified Google identity
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        avatar,
+        authProvider: 'google',
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Google authentication successful',
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar || avatar || null,
+        token,
+      },
+    });
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error processing Google authentication',
+    });
+  }
+};
+
