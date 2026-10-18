@@ -25,6 +25,16 @@ import { useAuth } from '../context/AuthContext';
 import CompactCalendar from '../components/dashboard/CompactCalendar';
 import QuickNotesCard from '../components/dashboard/QuickNotesCard';
 
+const getGreeting = () => {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+
+  if (minutes >= 270 && minutes < 720) return 'Good Morning'; // 4:30 AM – 11:59 AM
+  if (minutes >= 720 && minutes < 1020) return 'Good Afternoon'; // 12:00 PM – 4:59 PM
+  if (minutes >= 1020 && minutes < 1260) return 'Good Evening'; // 5:00 PM – 8:59 PM
+  return 'Good Night'; // 9:00 PM – 4:29 AM
+};
+
 const DashboardPage = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(() => taskService.getCachedStats?.() || null);
@@ -238,7 +248,7 @@ const DashboardPage = () => {
       >
         <div>
           <h2 className="text-2xl font-bold text-nimbus-900 dark:text-white">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
+            {getGreeting()}, {user?.name?.split(' ')[0]}
           </h2>
           <p className="text-nimbus-500 mt-1 text-sm">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })} · Here&apos;s your daily task overview.
