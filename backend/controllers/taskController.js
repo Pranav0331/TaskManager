@@ -300,6 +300,8 @@ export const createTask = async (req, res) => {
       dueDate: dueDate || null,
       subtasks: parsedSubtasks,
       userId: req.user._id,
+      userEmail: req.user.email || null,
+      userName: req.user.name || null,
       assignedTo: assignedTo || req.user._id,
     });
 

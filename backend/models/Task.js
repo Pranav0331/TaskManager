@@ -80,6 +80,15 @@ const taskSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    userEmail: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    userName: {
+      type: String,
+      default: null,
+    },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -102,6 +111,7 @@ const taskSchema = new mongoose.Schema(
 
 // Compound index for efficient user task queries
 taskSchema.index({ userId: 1, status: 1, priority: 1, dueDate: 1 });
+taskSchema.index({ userId: 1, createdAt: -1 });
 taskSchema.index({ dueDate: 1, status: 1 });
 taskSchema.index({ 'subtasks.dueDate': 1, 'subtasks.status': 1 });
 
